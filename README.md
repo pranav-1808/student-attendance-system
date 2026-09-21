@@ -222,3 +222,7 @@ The .env file is excluded from Git using .gitignore.
 👨‍💻 Project Status
 
 The application currently provides a working backend API and Streamlit frontend with CRUD functionality for students, teachers, timetable, and attendance.
+
+## Author
+
+Pranav Mahoths Balija
