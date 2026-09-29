@@ -14,5 +14,5 @@ class StudentResponse(BaseModel):
     email: EmailStr
 
 class StudentUpdate(BaseModel):
-    name : str
-    email : EmailStr
+    name : str | None = None
+    email : EmailStr | None = None

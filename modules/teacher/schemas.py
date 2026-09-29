@@ -6,8 +6,8 @@ class TeacherCreate(BaseModel):
     email : EmailStr
 
 class TeacherUpdate(BaseModel):
-    name : str
-    email : EmailStr
+    name : str | None = None
+    email : EmailStr | None = None
 
 class TeacherResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)

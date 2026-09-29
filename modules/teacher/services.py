@@ -8,8 +8,7 @@ async def create_teacher(
     db:AsyncSession
 ):
     new_teacher = Teacher(
-        name=teacher.name,
-        email=teacher.email
+        **teacher.model_dump()
     )
 
     db.add(new_teacher)
@@ -46,8 +45,11 @@ async def update_teacher(
     updated_teacher: TeacherUpdate,
     db:AsyncSession
 ):
-    teacher.name = updated_teacher.name
-    teacher.email = updated_teacher.email
+    if updated_teacher.name is not None:
+        teacher.name = updated_teacher.name
+
+    if updated_teacher.email is not None:
+        teacher.email = updated_teacher.email
 
     await db.commit()
     await db.refresh(teacher)

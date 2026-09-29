@@ -5,6 +5,7 @@ from modules.student.models import Student
 from modules.teacher.models import Teacher
 from modules.attendance.models import Attendance
 from modules.timetable.models import Timetable
+from modules.classroom.models import Class
 
 
 async def init_db():

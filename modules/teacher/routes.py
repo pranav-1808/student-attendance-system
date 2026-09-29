@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends ,HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.session import get_db
+from modules.teacher.validation import TeacherCreateValidation, TeacherUpdateValidation, validate_teacher_exists
 from modules.teacher.schemas import(
     TeacherCreate,
     TeacherUpdate,
@@ -10,11 +11,9 @@ from modules.teacher.schemas import(
 from modules.teacher.services import(
     create_teacher,
     get_teachers,
-    get_teacher,
     update_teacher,
     delete_teacher,
 )
-from modules.teacher.validation import validate_teacher_email
 
 router = APIRouter(
     prefix="/teachers",
@@ -26,17 +25,12 @@ async def create_teacher_route(
     teacher: TeacherCreate,
     db:AsyncSession = Depends(get_db)
 ):
-    existing_teacher = await validate_teacher_email(
-        teacher.email,
+    await TeacherCreateValidation(
+        teacher,
         db
-    )
+    ).validate()
 
-    if existing_teacher is not None:
-        raise HTTPException(
-            status_code=400,
-            detail="Email already registered"
-        )
-    return await create_teacher(teacher,db)
+    return await create_teacher(teacher, db)
 
 @router.get("/", response_model= list[TeacherResponse])
 async def get_teachers_route(
@@ -49,15 +43,10 @@ async def get_teacher_route(
     teacher_id:int,
     db:AsyncSession = Depends(get_db)
 ):
-    teacher = await get_teacher(teacher_id,db)
-
-    if teacher is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Teacher not found"
-        )
-
-    return teacher
+    return await validate_teacher_exists(
+        teacher_id,
+        db
+    )
 
 @router.put("/{teacher_id}", response_model=TeacherResponse)
 async def put_teacher_route(
@@ -65,28 +54,16 @@ async def put_teacher_route(
     updated_teacher: TeacherUpdate,
     db: AsyncSession = Depends(get_db)
 ):
-    teacher = await get_teacher(
+    teacher = await validate_teacher_exists(
         teacher_id,
         db
     )
 
-    if teacher is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Teacher not found"
-        )
-
-    existing_teacher = await validate_teacher_email(
-        updated_teacher.email,
-        db,
-        teacher_id
-    )
-
-    if existing_teacher is not None:
-        raise HTTPException(
-            status_code=400,
-            detail="Email already registered to another teacher"
-        )
+    await TeacherUpdateValidation(
+        updated_teacher,
+        teacher_id,
+        db
+    ).validate()
 
     return await update_teacher(
         teacher,
@@ -99,13 +76,11 @@ async def delete_teacher_route(
     teacher_id:int,
     db:AsyncSession = Depends(get_db)
 ):
-    teacher = await get_teacher(teacher_id,db)
+    teacher = await validate_teacher_exists(
+        teacher_id,
+        db
+    )
 
-    if teacher is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Teacher not found"
-        )
     return await delete_teacher(
         teacher,
         db

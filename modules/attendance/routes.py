@@ -12,12 +12,18 @@ from modules.attendance.schemas import (
 from modules.attendance.services import (
     create_attendance,
     get_attendances,
-    get_attendance,
     update_attendance,
     delete_attendance
 )
 
-from modules.attendance.validation import validate_attendance, validate_student_exists,validate_timetable_exists
+from modules.attendance.validation import (
+    validate_attendance,
+    validate_timetable_class,
+    validate_attendance_exists
+)
+
+from modules.student.validation import validate_student_exists
+from common.constants import HTTP_BAD_REQUEST
 
 
 router = APIRouter(
@@ -34,27 +40,16 @@ async def create_attendance_route(
     attendance: AttendanceCreate,
     db: AsyncSession = Depends(get_db)
 ):
-    student = await validate_student_exists(
+    await validate_student_exists(
         attendance.student_id,
         db
     )
 
-    if student is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Student not found"
-        )
-
-    timetable = await validate_timetable_exists(
+    await validate_timetable_class(
         attendance.timetable_id,
+        attendance.class_id,
         db
     )
-
-    if timetable is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Timetable entry not found"
-        )
 
     existing = await validate_attendance(
         attendance.student_id,
@@ -65,7 +60,7 @@ async def create_attendance_route(
 
     if existing is not None:
         raise HTTPException(
-            status_code=400,
+            status_code=HTTP_BAD_REQUEST,
             detail="Attendance already exists for this class"
         )
 
@@ -93,16 +88,10 @@ async def get_attendance_route(
     attendance_id: int,
     db: AsyncSession = Depends(get_db)
 ):
-    attendance = await get_attendance(
+    attendance = await validate_attendance_exists(
         attendance_id,
         db
     )
-
-    if attendance is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Attendance not found"
-        )
 
     return attendance
 
@@ -116,38 +105,21 @@ async def update_attendance_route(
     updated_attendance: AttendanceUpdate,
     db: AsyncSession = Depends(get_db)
 ):
-    attendance = await get_attendance(
+    attendance = await validate_attendance_exists(
         attendance_id,
         db
     )
 
-    if attendance is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Attendance not found"
-        )
-
-    student = await validate_student_exists(
+    await validate_student_exists(
         updated_attendance.student_id,
         db
     )
 
-    if student is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Student not found"
-        )
-
-    timetable = await validate_timetable_exists(
+    await validate_timetable_class(
         updated_attendance.timetable_id,
+        updated_attendance.class_id,
         db
     )
-
-    if timetable is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Timetable entry not found"
-        )
 
     existing = await validate_attendance(
         updated_attendance.student_id,
@@ -161,7 +133,7 @@ async def update_attendance_route(
         and existing.id != attendance_id
     ):
         raise HTTPException(
-            status_code=400,
+            status_code=HTTP_BAD_REQUEST,
             detail="Attendance already exists for this class"
         )
 
@@ -180,16 +152,10 @@ async def delete_attendance_route(
     attendance_id: int,
     db: AsyncSession = Depends(get_db)
 ):
-    attendance = await get_attendance(
+    attendance = await validate_attendance_exists(
         attendance_id,
         db
     )
-
-    if attendance is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Attendance not found"
-        )
 
     return await delete_attendance(
         attendance,

@@ -12,3 +12,8 @@ class Student(Base):
     attendances: Mapped[list["Attendance"]] = relationship(
         back_populates = "student"
     )
+
+    classes: Mapped[list["Class"]] = relationship(
+    secondary="class_students",
+    back_populates="students"
+)

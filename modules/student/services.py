@@ -10,8 +10,7 @@ async def create_student(
     db: AsyncSession
 ):
     new_student = Student(
-        name=student.name,
-        email=student.email
+        **student.model_dump()
     )
 
     db.add(new_student)
@@ -47,8 +46,11 @@ async def update_student(
     updated_student: StudentUpdate,
     db: AsyncSession
 ):
-    student.name = updated_student.name
-    student.email = updated_student.email
+    if updated_student.name is not None:
+        student.name = updated_student.name
+
+    if updated_student.email is not None:
+        student.email = updated_student.email
 
     await db.commit()
     await db.refresh(student)
@@ -56,13 +58,9 @@ async def update_student(
     return student
 
 async def delete_student(
-    student_id: int,
+    student: Student,
     db:AsyncSession
 ):
-    student = await get_student(student_id, db)
-
-    if student is None:
-        return None
     
     await db.delete(student)
     await db.commit()

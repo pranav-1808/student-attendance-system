@@ -3,6 +3,7 @@ from pydantic import BaseModel, ConfigDict
 
 class TimetableCreate(BaseModel):
     teacher_id: int
+    class_id: int
     subject: str
     day: str
     period: int
@@ -10,6 +11,7 @@ class TimetableCreate(BaseModel):
 
 class TimetableUpdate(BaseModel):
     teacher_id: int
+    class_id: int
     subject: str
     day: str
     period: int
@@ -20,6 +22,7 @@ class TimetableResponse(BaseModel):
 
     id: int
     teacher_id: int
+    class_id: int
     subject: str
     day: str
     period: int

@@ -19,5 +19,6 @@ class Teacher(Base):
     )
 
     timetables: Mapped[list["Timetable"]] = relationship(
-        back_populates="teacher"
+    back_populates="teacher",
+    cascade="all, delete-orphan"
     )

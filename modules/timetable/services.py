@@ -14,6 +14,7 @@ async def create_timetable(
 ):
     new_timetable = Timetable(
         teacher_id=timetable.teacher_id,
+        class_id=timetable.class_id,
         subject=timetable.subject,
         day=timetable.day,
         period=timetable.period
@@ -55,6 +56,7 @@ async def update_timetable(
     db: AsyncSession
 ):
     timetable.teacher_id = updated_timetable.teacher_id
+    timetable.class_id = updated_timetable.class_id
     timetable.subject = updated_timetable.subject
     timetable.day = updated_timetable.day
     timetable.period = updated_timetable.period
@@ -73,3 +75,15 @@ async def delete_timetable(
     await db.commit()
 
     return timetable
+
+async def get_timetables_by_class(
+    class_id: int,
+    db: AsyncSession
+):
+    result = await db.execute(
+        select(Timetable).where(
+            Timetable.class_id == class_id
+        )
+    )
+
+    return result.scalars().all()

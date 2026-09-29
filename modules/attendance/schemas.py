@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict
 class AttendanceCreate(BaseModel):
     student_id: int
     timetable_id: int
+    class_id: int
     date: date
     status: bool
 
@@ -13,6 +14,7 @@ class AttendanceCreate(BaseModel):
 class AttendanceUpdate(BaseModel):
     student_id: int
     timetable_id: int
+    class_id: int
     date: date
     status: bool
 

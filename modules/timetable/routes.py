@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.session import get_db
@@ -12,12 +12,12 @@ from modules.timetable.schemas import (
 from modules.timetable.services import (
     create_timetable,
     get_timetables,
-    get_timetable,
     update_timetable,
-    delete_timetable
+    delete_timetable,
+    get_timetables_by_class
 )
 
-from modules.timetable.validation import validate_timetable
+from modules.timetable.validation import TimetableCreateValidation , validate_timetable_exists, TimetableUpdateValidation
 
 
 router = APIRouter(
@@ -31,18 +31,10 @@ async def create_timetable_route(
     timetable: TimetableCreate,
     db: AsyncSession = Depends(get_db)
 ):
-    existing = await validate_timetable(
-        timetable.teacher_id,
-        timetable.day,
-        timetable.period,
+    await TimetableCreateValidation(
+        timetable,
         db
-    )
-
-    if existing is not None:
-        raise HTTPException(
-            status_code=400,
-            detail="Teacher already has a class at this period"
-        )
+    ).validate()
 
     return await create_timetable(
         timetable,
@@ -56,24 +48,29 @@ async def get_timetables_route(
 ):
     return await get_timetables(db)
 
+@router.get(
+    "/class/{class_id}",
+    response_model=list[TimetableResponse]
+)
+async def get_timetables_by_class_route(
+    class_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    return await get_timetables_by_class(
+        class_id,
+        db
+    )
+
 
 @router.get("/{timetable_id}", response_model=TimetableResponse)
 async def get_timetable_route(
     timetable_id: int,
     db: AsyncSession = Depends(get_db)
 ):
-    timetable = await get_timetable(
+    return await validate_timetable_exists(
         timetable_id,
         db
     )
-
-    if timetable is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Timetable entry not found"
-        )
-
-    return timetable
 
 
 @router.put("/{timetable_id}", response_model=TimetableResponse)
@@ -82,34 +79,21 @@ async def update_timetable_route(
     updated_timetable: TimetableUpdate,
     db: AsyncSession = Depends(get_db)
 ):
-    timetable = await get_timetable(
+    timetable = await validate_timetable_exists(
         timetable_id,
         db
     )
 
-    if timetable is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Timetable entry not found"
-        )
-
-    existing = await validate_timetable(
-        updated_timetable.teacher_id,
-        updated_timetable.day,
-        updated_timetable.period,
+    await TimetableUpdateValidation(
+        updated_timetable,
+        timetable_id,
         db
-    )
-
-    if existing is not None and existing.id != timetable_id:
-        raise HTTPException(
-            status_code=400,
-            detail="Teacher already has a class at this period"
-        )
+    ).validate()
 
     return await update_timetable(
-        timetable,
-        updated_timetable,
-        db
+    timetable,
+    updated_timetable,
+    db
     )
 
 
@@ -118,16 +102,10 @@ async def delete_timetable_route(
     timetable_id: int,
     db: AsyncSession = Depends(get_db)
 ):
-    timetable = await get_timetable(
+    timetable = await validate_timetable_exists(
         timetable_id,
         db
     )
-
-    if timetable is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Timetable entry not found"
-        )
 
     return await delete_timetable(
         timetable,

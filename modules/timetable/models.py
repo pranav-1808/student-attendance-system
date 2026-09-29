@@ -13,6 +13,10 @@ class Timetable(Base):
         ForeignKey("teachers.id")
     )
 
+    class_id: Mapped[int] = mapped_column(
+        ForeignKey("classes.id")
+    )
+
     subject: Mapped[str] = mapped_column(
         String(100)
     )
@@ -30,4 +34,4 @@ class Timetable(Base):
     attendances: Mapped[list["Attendance"]] = relationship(
     back_populates="timetable",
     cascade="all, delete-orphan"
-)
+    )
