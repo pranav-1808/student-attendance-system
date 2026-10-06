@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict ,EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class StudentCreate(BaseModel):
@@ -13,6 +13,7 @@ class StudentResponse(BaseModel):
     name: str
     email: EmailStr
 
+
 class StudentUpdate(BaseModel):
-    name : str | None = None
-    email : EmailStr | None = None
+    name: str | None = None
+    email: EmailStr | None = None

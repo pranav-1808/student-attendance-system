@@ -9,29 +9,18 @@ class Timetable(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    teacher_id: Mapped[int] = mapped_column(
-        ForeignKey("teachers.id")
-    )
+    teacher_id: Mapped[int] = mapped_column(ForeignKey("teachers.id"))
 
-    class_id: Mapped[int] = mapped_column(
-        ForeignKey("classes.id")
-    )
+    class_id: Mapped[int] = mapped_column(ForeignKey("classes.id"))
 
-    subject: Mapped[str] = mapped_column(
-        String(100)
-    )
+    subject: Mapped[str] = mapped_column(String(100))
 
-    day: Mapped[str] = mapped_column(
-        String(20)
-    )
+    day: Mapped[str] = mapped_column(String(20))
 
     period: Mapped[int] = mapped_column()
-    
-    teacher: Mapped["Teacher"] = relationship(
-        back_populates="timetables"
-    )
+
+    teacher: Mapped["Teacher"] = relationship(back_populates="timetables")
 
     attendances: Mapped[list["Attendance"]] = relationship(
-    back_populates="timetable",
-    cascade="all, delete-orphan"
+        back_populates="timetable", cascade="all, delete-orphan"
     )

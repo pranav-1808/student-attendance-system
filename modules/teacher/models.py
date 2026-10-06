@@ -9,16 +9,10 @@ class Teacher(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    name: Mapped[str] = mapped_column(
-        String(100)
-    )
+    name: Mapped[str] = mapped_column(String(100))
 
-    email: Mapped[str] = mapped_column(
-        String(255),
-        unique=True
-    )
+    email: Mapped[str] = mapped_column(String(255), unique=True)
 
     timetables: Mapped[list["Timetable"]] = relationship(
-    back_populates="teacher",
-    cascade="all, delete-orphan"
+        back_populates="teacher", cascade="all, delete-orphan"
     )

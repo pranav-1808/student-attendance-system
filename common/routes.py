@@ -1,10 +1,10 @@
 from fastapi import APIRouter
 
+from modules.attendance.routes import router as attendance_router
+from modules.classroom.routes import router as classroom_router
 from modules.student.routes import router as student_router
 from modules.teacher.routes import router as teacher_router
 from modules.timetable.routes import router as timetable_router
-from modules.attendance.routes import router as attendance_router
-from modules.classroom.routes import router as classroom_router
 
 router = APIRouter()
 

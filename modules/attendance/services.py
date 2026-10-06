@@ -2,21 +2,15 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from modules.attendance.models import Attendance
-from modules.attendance.schemas import (
-    AttendanceCreate,
-    AttendanceUpdate
-)
+from modules.attendance.schemas import AttendanceCreate, AttendanceUpdate
 
 
-async def create_attendance(
-    attendance: AttendanceCreate,
-    db: AsyncSession
-):
+async def create_attendance(attendance: AttendanceCreate, db: AsyncSession):
     new_attendance = Attendance(
         student_id=attendance.student_id,
         timetable_id=attendance.timetable_id,
         date=attendance.date,
-        status=attendance.status
+        status=attendance.status,
     )
 
     db.add(new_attendance)
@@ -27,33 +21,26 @@ async def create_attendance(
     return new_attendance
 
 
-async def get_attendances(
-    db: AsyncSession
-):
-    result = await db.execute(
-        select(Attendance)
-    )
+async def get_attendances(filters: dict, db: AsyncSession):
+    query = select(Attendance)
+
+    for field, value in filters.items():
+        if hasattr(Attendance, field):
+            query = query.where(getattr(Attendance, field) == value)
+
+    result = await db.execute(query)
 
     return result.scalars().all()
 
 
-async def get_attendance(
-    attendance_id: int,
-    db: AsyncSession
-):
-    result = await db.execute(
-        select(Attendance).where(
-            Attendance.id == attendance_id
-        )
-    )
+async def get_attendance(attendance_id: int, db: AsyncSession):
+    result = await db.execute(select(Attendance).where(Attendance.id == attendance_id))
 
     return result.scalar_one_or_none()
 
 
 async def update_attendance(
-    attendance: Attendance,
-    updated_attendance: AttendanceUpdate,
-    db: AsyncSession
+    attendance: Attendance, updated_attendance: AttendanceUpdate, db: AsyncSession
 ):
     attendance.student_id = updated_attendance.student_id
     attendance.timetable_id = updated_attendance.timetable_id
@@ -66,10 +53,7 @@ async def update_attendance(
     return attendance
 
 
-async def delete_attendance(
-    attendance: Attendance,
-    db: AsyncSession
-):
+async def delete_attendance(attendance: Attendance, db: AsyncSession):
     await db.delete(attendance)
 
     await db.commit()

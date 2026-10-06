@@ -1,66 +1,59 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.validation import validate_unique_email
 from modules.student.models import Student
-from modules.student.schemas import StudentCreate , StudentUpdate
-from common.constants import HTTP_NOT_FOUND, HTTP_BAD_REQUEST
+from modules.student.schemas import StudentCreate, StudentUpdate
 from modules.student.services import get_student
 
 
-class StudentCreateValidation:
-
-    def __init__(self,student: StudentCreate, db: AsyncSession):
-        self.student = student
-        self.db = db
-
-    async def validate(self):
-        existing_student = await validate_unique_email(
-            Student,
-            self.student.email,
-            self.db
-        )
-
-        if existing_student is not None:
-            raise HTTPException(
-                status_code=HTTP_BAD_REQUEST,
-                detail="Email already registered"
-            )
-
-class StudentUpdateValidation:
-
-    def __init__(self , student: StudentUpdate, student_id: int, db: AsyncSession):
-        self.student = student
-        self.student_id = student_id
-        self.db = db
-
-    async def validate(self):
-        if self.student.email is None:
-            return
-
-        existing_student = await validate_unique_email(
-            Student,
-            self.student.email,
-            self.db,
-            self.student_id
-        )
-
-        if existing_student is not None:
-            raise HTTPException(
-                status_code=HTTP_BAD_REQUEST,
-                detail="Email already registed to another student"
-            )
-
-async def validate_student_exists(
-    student_id : int,
-    db : AsyncSession
+async def validate_create_student(
+    student: StudentCreate,
+    db: AsyncSession,
 ):
+    existing_student = await validate_unique_email(
+        Student,
+        student.email,
+        db,
+    )
+
+    if existing_student is not None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered",
+        )
+
+
+async def validate_update_student(
+    student: Student,
+    updated_student: StudentUpdate,
+    db: AsyncSession,
+):
+    if updated_student.email is None:
+        return student
+
+    existing_email = await validate_unique_email(
+        Student,
+        updated_student.email,
+        db,
+        student.id,
+    )
+
+    if existing_email is not None:
+        raise HTTPException(
+            status_code=400,
+            detail="Email already registered to another student",
+        )
+
+    return student
+
+
+async def validate_student_exists(student_id: int, db: AsyncSession):
     student = await get_student(student_id, db)
 
     if student is None:
         raise HTTPException(
-            status_code=HTTP_NOT_FOUND,
-            detail="Student not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Student not found"
         )
 
     return student

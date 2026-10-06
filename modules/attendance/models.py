@@ -11,37 +11,20 @@ class Attendance(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "student_id",
-            "timetable_id",
-            "date",
-            name="unique_student_timetable_date"
+            "student_id", "timetable_id", "date", name="unique_student_timetable_date"
         ),
     )
 
-    id: Mapped[int] = mapped_column(
-        primary_key=True
-    )
+    id: Mapped[int] = mapped_column(primary_key=True)
 
-    student_id: Mapped[int] = mapped_column(
-        ForeignKey("students.id")
-    )
+    student_id: Mapped[int] = mapped_column(ForeignKey("students.id"))
 
-    timetable_id: Mapped[int] = mapped_column(
-        ForeignKey("timetable.id")
-    )
+    timetable_id: Mapped[int] = mapped_column(ForeignKey("timetable.id"))
 
-    date: Mapped[date] = mapped_column(
-        Date
-    )
+    date: Mapped[date] = mapped_column(Date)
 
-    status: Mapped[bool] = mapped_column(
-        Boolean
-    )
+    status: Mapped[bool] = mapped_column(Boolean)
 
-    student: Mapped["Student"] = relationship(
-        back_populates="attendances"
-    )
+    student: Mapped["Student"] = relationship(back_populates="attendances")
 
-    timetable: Mapped["Timetable"] = relationship(
-        back_populates="attendances"
-    )
+    timetable: Mapped["Timetable"] = relationship(back_populates="attendances")

@@ -1,20 +1,14 @@
-import sys
 import os
+import sys
 
-sys.path.append(
-    os.path.dirname(
-        os.path.dirname(
-            os.path.abspath(__file__)
-        )
-    )
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import streamlit as st
-import requests
 from datetime import date
 
-from common.constants import DAYS_OF_WEEK
+import requests
+import streamlit as st
 
+from common.constants import DAYS_OF_WEEK
 
 # ============================================================
 # CONFIGURATION
@@ -24,9 +18,7 @@ API_URL = "http://127.0.0.1:8000"
 
 
 st.set_page_config(
-    page_title="Student Attendance System",
-    page_icon="🎓",
-    layout="wide"
+    page_title="Student Attendance System", page_icon="🎓", layout="wide"
 )
 
 
@@ -409,15 +401,15 @@ st.markdown(THEME_CSS, unsafe_allow_html=True)
 
 def page_header(title, subtitle=""):
     st.markdown(
-        f'<div class="page-head"><h1>{title}</h1>'
-        f'<p>{subtitle}</p></div>',
-        unsafe_allow_html=True
+        f'<div class="page-head"><h1>{title}</h1><p>{subtitle}</p></div>',
+        unsafe_allow_html=True,
     )
 
 
 # ============================================================
 # HELPER FUNCTION
 # ============================================================
+
 
 def get_data(endpoint):
     response = requests.get(f"{API_URL}{endpoint}")
@@ -442,20 +434,13 @@ st.sidebar.markdown(
         </div>
     </div>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
 
 menu = st.sidebar.radio(
     "Navigation",
-    [
-        "Dashboard",
-        "Students",
-        "Classes",
-        "Teachers",
-        "Timetable",
-        "Attendance"
-    ],
-    label_visibility="collapsed"
+    ["Dashboard", "Students", "Classes", "Teachers", "Timetable", "Attendance"],
+    label_visibility="collapsed",
 )
 
 
@@ -464,10 +449,9 @@ menu = st.sidebar.radio(
 # ============================================================
 
 if menu == "Dashboard":
-
     page_header(
         "Attendance dashboard",
-        "Select a date and choose how you want to view the attendance."
+        "Select a date and choose how you want to view the attendance.",
     )
 
     # --------------------------------------------------------
@@ -488,55 +472,34 @@ if menu == "Dashboard":
 
     with col1:
         selected_date = st.date_input(
-            "Select date",
-            value=date.today(),
-            key="dashboard_date"
+            "Select date", value=date.today(), key="dashboard_date"
         )
 
     with col2:
         view_by = st.selectbox(
-            "View attendance by",
-            ["Student", "Teacher"],
-            key="dashboard_view_by"
+            "View attendance by", ["Student", "Teacher"], key="dashboard_view_by"
         )
 
     st.divider()
 
     selected_date_string = selected_date.isoformat()
 
-    student_lookup = {
-        student["id"]: student["name"]
-        for student in students
-    }
+    student_lookup = {student["id"]: student["name"] for student in students}
 
-    teacher_lookup = {
-        teacher["id"]: teacher["name"]
-        for teacher in teachers
-    }
+    teacher_lookup = {teacher["id"]: teacher["name"] for teacher in teachers}
 
-    class_lookup = {
-        classroom["id"]: classroom["name"]
-        for classroom in classes
-    }
+    class_lookup = {classroom["id"]: classroom["name"] for classroom in classes}
 
-    timetable_lookup = {
-        timetable["id"]: timetable
-        for timetable in timetables
-    }
+    timetable_lookup = {timetable["id"]: timetable for timetable in timetables}
 
     filtered_attendance = [
-        record
-        for record in attendance
-        if record["date"] == selected_date_string
+        record for record in attendance if record["date"] == selected_date_string
     ]
 
     # Attendance lookup makes it easy to find a student's status
     # for a particular timetable on the selected date.
     attendance_lookup = {
-        (
-            record["student_id"],
-            record["timetable_id"]
-        ): record["status"]
+        (record["student_id"], record["timetable_id"]): record["status"]
         for record in filtered_attendance
     }
 
@@ -545,11 +508,10 @@ if menu == "Dashboard":
     # --------------------------------------------------------
 
     if view_by == "Student":
-
         st.subheader("Student attendance")
 
         class_options = {
-            f'{classroom["id"]} - {classroom["name"]}': classroom["id"]
+            f"{classroom['id']} - {classroom['name']}": classroom["id"]
             for classroom in classes
         }
 
@@ -557,15 +519,11 @@ if menu == "Dashboard":
             st.info("No classes found.")
         else:
             selected_class_label = st.selectbox(
-                "Class",
-                list(class_options.keys()),
-                key="dashboard_student_class"
+                "Class", list(class_options.keys()), key="dashboard_student_class"
             )
             selected_class_id = class_options[selected_class_label]
 
-            class_students = get_data(
-                f"/classes/{selected_class_id}/students"
-            )
+            class_students = get_data(f"/classes/{selected_class_id}/students")
 
             class_timetables = [
                 timetable
@@ -574,15 +532,11 @@ if menu == "Dashboard":
             ]
 
             class_timetables.sort(
-                key=lambda item: (
-                    item.get("period", 0),
-                    item.get("subject", "")
-                )
+                key=lambda item: (item.get("period", 0), item.get("subject", ""))
             )
 
             show_complete_table = st.checkbox(
-                "Show complete table",
-                key="dashboard_student_complete"
+                "Show complete table", key="dashboard_student_complete"
             )
 
             if not class_students:
@@ -628,19 +582,15 @@ if menu == "Dashboard":
                                 else "—"
                             )
 
-                            cell_values.append(
-                                f'{timetable["subject"]}: {status_text}'
-                            )
+                            cell_values.append(f"{timetable['subject']}: {status_text}")
 
-                        row[f"Period {period}"] = "\n".join(cell_values) if cell_values else "—"
+                        row[f"Period {period}"] = (
+                            "\n".join(cell_values) if cell_values else "—"
+                        )
 
                     table_data.append(row)
 
-                st.dataframe(
-                    table_data,
-                    use_container_width=True,
-                    hide_index=True
-                )
+                st.dataframe(table_data, use_container_width=True, hide_index=True)
 
             else:
                 # ------------------------------------------------
@@ -650,7 +600,7 @@ if menu == "Dashboard":
                 # can type a name while still seeing all available
                 # students in the dropdown.
                 student_options = {
-                    f'{student["name"]} (ID {student["id"]})': student
+                    f"{student['name']} (ID {student['id']})": student
                     for student in class_students
                 }
 
@@ -659,7 +609,7 @@ if menu == "Dashboard":
                     list(student_options.keys()),
                     index=None,
                     placeholder="Type a student name...",
-                    key="dashboard_student_result"
+                    key="dashboard_student_result",
                 )
 
                 if selected_student_label is not None:
@@ -672,27 +622,27 @@ if menu == "Dashboard":
                             (selected_student["id"], timetable["id"])
                         )
 
-                        student_table.append({
-                            "Period": timetable["period"],
-                            "Subject": timetable["subject"],
-                            "Day": timetable["day"],
-                            "Status": (
-                                "🟢 Present"
-                                if status is True
-                                else "🔴 Absent"
-                                if status is False
-                                else "— No record"
-                            )
-                        })
+                        student_table.append(
+                            {
+                                "Period": timetable["period"],
+                                "Subject": timetable["subject"],
+                                "Day": timetable["day"],
+                                "Status": (
+                                    "🟢 Present"
+                                    if status is True
+                                    else "🔴 Absent"
+                                    if status is False
+                                    else "— No record"
+                                ),
+                            }
+                        )
 
                     st.markdown(
-                        f'**{selected_student["name"]} — '
-                        f'{selected_date.strftime("%d %B %Y")}**'
+                        f"**{selected_student['name']} — "
+                        f"{selected_date.strftime('%d %B %Y')}**"
                     )
                     st.dataframe(
-                        student_table,
-                        use_container_width=True,
-                        hide_index=True
+                        student_table, use_container_width=True, hide_index=True
                     )
 
     # --------------------------------------------------------
@@ -700,12 +650,10 @@ if menu == "Dashboard":
     # --------------------------------------------------------
 
     else:
-
         st.subheader("Teacher attendance")
 
         show_complete_table = st.checkbox(
-            "Show complete table",
-            key="dashboard_teacher_complete"
+            "Show complete table", key="dashboard_teacher_complete"
         )
 
         if not teachers:
@@ -729,40 +677,34 @@ if menu == "Dashboard":
                         ]
 
                         present = sum(
-                            1 for record in records
-                            if record["status"] is True
+                            1 for record in records if record["status"] is True
                         )
                         absent = sum(
-                            1 for record in records
-                            if record["status"] is False
+                            1 for record in records if record["status"] is False
                         )
 
-                        teacher_table.append({
-                            "Teacher": teacher["name"],
-                            "Class": class_lookup.get(
-                                timetable.get("class_id"),
-                                f'Class {timetable.get("class_id", "—")}'
-                            ),
-                            "Period": timetable["period"],
-                            "Subject": timetable["subject"],
-                            "Present": present,
-                            "Absent": absent,
-                            "Total": present + absent
-                        })
+                        teacher_table.append(
+                            {
+                                "Teacher": teacher["name"],
+                                "Class": class_lookup.get(
+                                    timetable.get("class_id"),
+                                    f"Class {timetable.get('class_id', '—')}",
+                                ),
+                                "Period": timetable["period"],
+                                "Subject": timetable["subject"],
+                                "Present": present,
+                                "Absent": absent,
+                                "Total": present + absent,
+                            }
+                        )
 
                 teacher_table.sort(
-                    key=lambda row: (
-                        row["Teacher"],
-                        row["Period"],
-                        row["Subject"]
-                    )
+                    key=lambda row: (row["Teacher"], row["Period"], row["Subject"])
                 )
 
                 if teacher_table:
                     st.dataframe(
-                        teacher_table,
-                        use_container_width=True,
-                        hide_index=True
+                        teacher_table, use_container_width=True, hide_index=True
                     )
                 else:
                     st.info(
@@ -777,7 +719,7 @@ if menu == "Dashboard":
                 # The selectbox is searchable and keeps all teachers
                 # visible when the dropdown is opened.
                 teacher_options = {
-                    f'{teacher["name"]} (ID {teacher["id"]})': teacher
+                    f"{teacher['name']} (ID {teacher['id']})": teacher
                     for teacher in teachers
                 }
 
@@ -786,7 +728,7 @@ if menu == "Dashboard":
                     list(teacher_options.keys()),
                     index=None,
                     placeholder="Type a teacher name...",
-                    key="dashboard_teacher_result"
+                    key="dashboard_teacher_result",
                 )
 
                 if selected_teacher_label is not None:
@@ -808,44 +750,38 @@ if menu == "Dashboard":
                         ]
 
                         present = sum(
-                            1 for record in records
-                            if record["status"] is True
+                            1 for record in records if record["status"] is True
                         )
                         absent = sum(
-                            1 for record in records
-                            if record["status"] is False
+                            1 for record in records if record["status"] is False
                         )
 
-                        teacher_table.append({
-                            "Period": timetable["period"],
-                            "Class": class_lookup.get(
-                                timetable.get("class_id"),
-                                f'Class {timetable.get("class_id", "—")}'
-                            ),
-                            "Subject": timetable["subject"],
-                            "Present": present,
-                            "Absent": absent,
-                            "Total": present + absent
-                        })
+                        teacher_table.append(
+                            {
+                                "Period": timetable["period"],
+                                "Class": class_lookup.get(
+                                    timetable.get("class_id"),
+                                    f"Class {timetable.get('class_id', '—')}",
+                                ),
+                                "Subject": timetable["subject"],
+                                "Present": present,
+                                "Absent": absent,
+                                "Total": present + absent,
+                            }
+                        )
 
                     teacher_table.sort(
-                        key=lambda row: (
-                            row["Period"],
-                            row["Class"],
-                            row["Subject"]
-                        )
+                        key=lambda row: (row["Period"], row["Class"], row["Subject"])
                     )
 
                     st.markdown(
-                        f'**{selected_teacher["name"]} — '
-                        f'{selected_date.strftime("%d %B %Y")}**'
+                        f"**{selected_teacher['name']} — "
+                        f"{selected_date.strftime('%d %B %Y')}**"
                     )
 
                     if teacher_table:
                         st.dataframe(
-                            teacher_table,
-                            use_container_width=True,
-                            hide_index=True
+                            teacher_table, use_container_width=True, hide_index=True
                         )
                     else:
                         st.caption(
@@ -861,37 +797,20 @@ if menu == "Dashboard":
 
     st.subheader("Daily summary")
 
-    present_count = sum(
-        1
-        for record in filtered_attendance
-        if record["status"] is True
-    )
+    present_count = sum(1 for record in filtered_attendance if record["status"] is True)
 
-    absent_count = sum(
-        1
-        for record in filtered_attendance
-        if record["status"] is False
-    )
+    absent_count = sum(1 for record in filtered_attendance if record["status"] is False)
 
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.metric(
-            "Total records",
-            len(filtered_attendance)
-        )
+        st.metric("Total records", len(filtered_attendance))
 
     with col2:
-        st.metric(
-            "Present",
-            present_count
-        )
+        st.metric("Present", present_count)
 
     with col3:
-        st.metric(
-            "Absent",
-            absent_count
-        )
+        st.metric("Absent", absent_count)
 
 
 # ============================================================
@@ -899,11 +818,7 @@ if menu == "Dashboard":
 # ============================================================
 
 elif menu == "Students":
-
-    page_header(
-        "Students",
-        "View, add, update and remove student records."
-    )
+    page_header("Students", "View, add, update and remove student records.")
 
     # --------------------------------------------------------
     # VIEW STUDENTS
@@ -914,14 +829,9 @@ elif menu == "Students":
     students = get_data("/students/")
 
     if students:
-
-        st.dataframe(
-            students,
-            use_container_width=True
-        )
+        st.dataframe(students, use_container_width=True)
 
     else:
-
         st.info("No students found.")
 
     st.divider()
@@ -933,35 +843,23 @@ elif menu == "Students":
     st.subheader("Add student")
 
     with st.form("add_student_form"):
-
         name = st.text_input("Student Name")
 
         email = st.text_input("Email")
 
-        submitted = st.form_submit_button(
-            "Add Student"
-        )
+        submitted = st.form_submit_button("Add Student")
 
         if submitted:
-
             response = requests.post(
-                f"{API_URL}/students/",
-                json={
-                    "name": name,
-                    "email": email
-                }
+                f"{API_URL}/students/", json={"name": name, "email": email}
             )
 
             if response.status_code == 200:
-
-                st.success(
-                    "Student added successfully!"
-                )
+                st.success("Student added successfully!")
 
                 st.rerun()
 
             else:
-
                 try:
                     error = response.json()["detail"]
                 except Exception:
@@ -978,57 +876,35 @@ elif menu == "Students":
     st.subheader("Update student")
 
     if students:
-
         student_options = {
-            f'{student["id"]} - {student["name"]}':
-            student
-            for student in students
+            f"{student['id']} - {student['name']}": student for student in students
         }
 
         selected_student = st.selectbox(
-            "Select Student",
-            list(student_options.keys()),
-            key="update_student_select"
+            "Select Student", list(student_options.keys()), key="update_student_select"
         )
 
         student = student_options[selected_student]
 
         with st.form("update_student_form"):
+            new_name = st.text_input("Name", value=student["name"])
 
-            new_name = st.text_input(
-                "Name",
-                value=student["name"]
-            )
+            new_email = st.text_input("Email", value=student["email"])
 
-            new_email = st.text_input(
-                "Email",
-                value=student["email"]
-            )
-
-            update_button = st.form_submit_button(
-                "Update Student"
-            )
+            update_button = st.form_submit_button("Update Student")
 
             if update_button:
-
                 response = requests.put(
-                    f'{API_URL}/students/{student["id"]}',
-                    json={
-                        "name": new_name,
-                        "email": new_email
-                    }
+                    f"{API_URL}/students/{student['id']}",
+                    json={"name": new_name, "email": new_email},
                 )
 
                 if response.status_code == 200:
-
-                    st.success(
-                        "Student updated successfully!"
-                    )
+                    st.success("Student updated successfully!")
 
                     st.rerun()
 
                 else:
-
                     try:
                         error = response.json()["detail"]
                     except Exception:
@@ -1045,37 +921,27 @@ elif menu == "Students":
     st.subheader("Delete student")
 
     if students:
-
         student_options = {
-            f'{student["id"]} - {student["name"]}':
-            student
-            for student in students
+            f"{student['id']} - {student['name']}": student for student in students
         }
 
         selected_student = st.selectbox(
             "Select Student to Delete",
             list(student_options.keys()),
-            key="delete_student_select"
+            key="delete_student_select",
         )
 
         student = student_options[selected_student]
 
         if st.button("Delete Student"):
-
-            response = requests.delete(
-                f'{API_URL}/students/{student["id"]}'
-            )
+            response = requests.delete(f"{API_URL}/students/{student['id']}")
 
             if response.status_code == 200:
-
-                st.success(
-                    "Student deleted successfully!"
-                )
+                st.success("Student deleted successfully!")
 
                 st.rerun()
 
             else:
-
                 try:
                     error = response.json()["detail"]
                 except Exception:
@@ -1089,10 +955,8 @@ elif menu == "Students":
 # ============================================================
 
 elif menu == "Classes":
-
     page_header(
-        "Classes",
-        "Create classes and manage which students belong to each one."
+        "Classes", "Create classes and manage which students belong to each one."
     )
 
     classes = get_data("/classes/")
@@ -1105,11 +969,7 @@ elif menu == "Classes":
     st.subheader("All classes")
 
     if classes:
-        st.dataframe(
-            classes,
-            use_container_width=True,
-            hide_index=True
-        )
+        st.dataframe(classes, use_container_width=True, hide_index=True)
     else:
         st.info("No classes found.")
 
@@ -1122,17 +982,12 @@ elif menu == "Classes":
     st.subheader("Add class")
 
     with st.form("add_class_form"):
-
         class_name = st.text_input("Class Name")
 
         submitted = st.form_submit_button("Add Class")
 
         if submitted:
-
-            response = requests.post(
-                f"{API_URL}/classes/",
-                json={"name": class_name}
-            )
+            response = requests.post(f"{API_URL}/classes/", json={"name": class_name})
 
             if response.status_code == 200:
                 st.success("Class added successfully!")
@@ -1153,67 +1008,48 @@ elif menu == "Classes":
     st.subheader("Manage students in class")
 
     if classes:
-
         class_options = {
-            f'{classroom["id"]} - {classroom["name"]}': classroom
+            f"{classroom['id']} - {classroom['name']}": classroom
             for classroom in classes
         }
 
         selected_class_name = st.selectbox(
-            "Select Class",
-            list(class_options.keys()),
-            key="manage_class_select"
+            "Select Class", list(class_options.keys()), key="manage_class_select"
         )
 
         selected_class = class_options[selected_class_name]
         class_id = selected_class["id"]
 
-        class_students = get_data(
-            f"/classes/{class_id}/students"
-        )
+        class_students = get_data(f"/classes/{class_id}/students")
 
-        current_student_ids = {
-            student["id"]
-            for student in class_students
-        }
+        current_student_ids = {student["id"] for student in class_students}
 
         st.write("**Students currently in this class:**")
 
         if class_students:
-            st.dataframe(
-                class_students,
-                use_container_width=True,
-                hide_index=True
-            )
+            st.dataframe(class_students, use_container_width=True, hide_index=True)
         else:
             st.info("No students have been added to this class yet.")
 
         available_students = [
-            student
-            for student in students
-            if student["id"] not in current_student_ids
+            student for student in students if student["id"] not in current_student_ids
         ]
 
         st.markdown("### Add student")
 
         if available_students:
-
             student_options = {
-                f'{student["id"]} - {student["name"]}': student["id"]
+                f"{student['id']} - {student['name']}": student["id"]
                 for student in available_students
             }
 
             selected_student_name = st.selectbox(
                 "Select Student",
                 list(student_options.keys()),
-                key="add_student_to_class_select"
+                key="add_student_to_class_select",
             )
 
-            if st.button(
-                "Add Student to Class",
-                key="add_student_to_class_button"
-            ):
-
+            if st.button("Add Student to Class", key="add_student_to_class_button"):
                 response = requests.post(
                     f"{API_URL}/classes/{class_id}/students/{student_options[selected_student_name]}"
                 )
@@ -1237,23 +1073,20 @@ elif menu == "Classes":
         st.markdown("### Remove student")
 
         if class_students:
-
             remove_options = {
-                f'{student["id"]} - {student["name"]}': student["id"]
+                f"{student['id']} - {student['name']}": student["id"]
                 for student in class_students
             }
 
             selected_remove_name = st.selectbox(
                 "Select Student to Remove",
                 list(remove_options.keys()),
-                key="remove_student_from_class_select"
+                key="remove_student_from_class_select",
             )
 
             if st.button(
-                "Remove Student from Class",
-                key="remove_student_from_class_button"
+                "Remove Student from Class", key="remove_student_from_class_button"
             ):
-
                 response = requests.delete(
                     f"{API_URL}/classes/{class_id}/students/{remove_options[selected_remove_name]}"
                 )
@@ -1280,25 +1113,21 @@ elif menu == "Classes":
     st.subheader("Delete class")
 
     if classes:
-
         delete_class_options = {
-            f'{classroom["id"]} - {classroom["name"]}': classroom
+            f"{classroom['id']} - {classroom['name']}": classroom
             for classroom in classes
         }
 
         selected_delete_class = st.selectbox(
             "Select Class to Delete",
             list(delete_class_options.keys()),
-            key="delete_class_select"
+            key="delete_class_select",
         )
 
         classroom = delete_class_options[selected_delete_class]
 
         if st.button("Delete Class", key="delete_class_button"):
-
-            response = requests.delete(
-                f'{API_URL}/classes/{classroom["id"]}'
-            )
+            response = requests.delete(f"{API_URL}/classes/{classroom['id']}")
 
             if response.status_code == 200:
                 st.success("Class deleted successfully!")
@@ -1316,11 +1145,7 @@ elif menu == "Classes":
 # ============================================================
 
 elif menu == "Teachers":
-
-    page_header(
-        "Teachers",
-        "View, add, update and remove teacher records."
-    )
+    page_header("Teachers", "View, add, update and remove teacher records.")
 
     # --------------------------------------------------------
     # VIEW TEACHERS
@@ -1331,14 +1156,9 @@ elif menu == "Teachers":
     teachers = get_data("/teachers/")
 
     if teachers:
-
-        st.dataframe(
-            teachers,
-            use_container_width=True
-        )
+        st.dataframe(teachers, use_container_width=True)
 
     else:
-
         st.info("No teachers found.")
 
     st.divider()
@@ -1350,35 +1170,23 @@ elif menu == "Teachers":
     st.subheader("Add teacher")
 
     with st.form("add_teacher_form"):
-
         name = st.text_input("Teacher Name")
 
         email = st.text_input("Teacher Email")
 
-        submitted = st.form_submit_button(
-            "Add Teacher"
-        )
+        submitted = st.form_submit_button("Add Teacher")
 
         if submitted:
-
             response = requests.post(
-                f"{API_URL}/teachers/",
-                json={
-                    "name": name,
-                    "email": email
-                }
+                f"{API_URL}/teachers/", json={"name": name, "email": email}
             )
 
             if response.status_code == 200:
-
-                st.success(
-                    "Teacher added successfully!"
-                )
+                st.success("Teacher added successfully!")
 
                 st.rerun()
 
             else:
-
                 try:
                     error = response.json()["detail"]
                 except Exception:
@@ -1395,57 +1203,35 @@ elif menu == "Teachers":
     st.subheader("Update teacher")
 
     if teachers:
-
         teacher_options = {
-            f'{teacher["id"]} - {teacher["name"]}':
-            teacher
-            for teacher in teachers
+            f"{teacher['id']} - {teacher['name']}": teacher for teacher in teachers
         }
 
         selected_teacher = st.selectbox(
-            "Select Teacher",
-            list(teacher_options.keys()),
-            key="update_teacher_select"
+            "Select Teacher", list(teacher_options.keys()), key="update_teacher_select"
         )
 
         teacher = teacher_options[selected_teacher]
 
         with st.form("update_teacher_form"):
+            new_name = st.text_input("Name", value=teacher["name"])
 
-            new_name = st.text_input(
-                "Name",
-                value=teacher["name"]
-            )
+            new_email = st.text_input("Email", value=teacher["email"])
 
-            new_email = st.text_input(
-                "Email",
-                value=teacher["email"]
-            )
-
-            update_button = st.form_submit_button(
-                "Update Teacher"
-            )
+            update_button = st.form_submit_button("Update Teacher")
 
             if update_button:
-
                 response = requests.put(
-                    f'{API_URL}/teachers/{teacher["id"]}',
-                    json={
-                        "name": new_name,
-                        "email": new_email
-                    }
+                    f"{API_URL}/teachers/{teacher['id']}",
+                    json={"name": new_name, "email": new_email},
                 )
 
                 if response.status_code == 200:
-
-                    st.success(
-                        "Teacher updated successfully!"
-                    )
+                    st.success("Teacher updated successfully!")
 
                     st.rerun()
 
                 else:
-
                     try:
                         error = response.json()["detail"]
                     except Exception:
@@ -1462,37 +1248,27 @@ elif menu == "Teachers":
     st.subheader("Delete teacher")
 
     if teachers:
-
         teacher_options = {
-            f'{teacher["id"]} - {teacher["name"]}':
-            teacher
-            for teacher in teachers
+            f"{teacher['id']} - {teacher['name']}": teacher for teacher in teachers
         }
 
         selected_teacher = st.selectbox(
             "Select Teacher to Delete",
             list(teacher_options.keys()),
-            key="delete_teacher_select"
+            key="delete_teacher_select",
         )
 
         teacher = teacher_options[selected_teacher]
 
         if st.button("Delete Teacher"):
-
-            response = requests.delete(
-                f'{API_URL}/teachers/{teacher["id"]}'
-            )
+            response = requests.delete(f"{API_URL}/teachers/{teacher['id']}")
 
             if response.status_code == 200:
-
-                st.success(
-                    "Teacher deleted successfully!"
-                )
+                st.success("Teacher deleted successfully!")
 
                 st.rerun()
 
             else:
-
                 try:
                     error = response.json()["detail"]
                 except Exception:
@@ -1506,11 +1282,7 @@ elif menu == "Teachers":
 # ============================================================
 
 elif menu == "Timetable":
-
-    page_header(
-        "Timetable",
-        "Schedule classes by teacher, subject, day and period."
-    )
+    page_header("Timetable", "Schedule classes by teacher, subject, day and period.")
 
     teachers = get_data("/teachers/")
     classes = get_data("/classes/")
@@ -1523,14 +1295,9 @@ elif menu == "Timetable":
     st.subheader("All classes")
 
     if timetables:
-
-        st.dataframe(
-            timetables,
-            use_container_width=True
-        )
+        st.dataframe(timetables, use_container_width=True)
 
     else:
-
         st.info("No timetable entries found.")
 
     st.divider()
@@ -1542,83 +1309,47 @@ elif menu == "Timetable":
     st.subheader("Add class")
 
     if teachers and classes:
-
         teacher_options = {
-            f'{teacher["id"]} - {teacher["name"]}':
-            teacher["id"]
+            f"{teacher['id']} - {teacher['name']}": teacher["id"]
             for teacher in teachers
         }
 
         class_options = {
-            f'{classroom["id"]} - {classroom["name"]}':
-            classroom["id"]
+            f"{classroom['id']} - {classroom['name']}": classroom["id"]
             for classroom in classes
         }
 
         with st.form("add_timetable_form"):
+            selected_teacher = st.selectbox("Teacher", list(teacher_options.keys()))
 
-            selected_teacher = st.selectbox(
-                "Teacher",
-                list(teacher_options.keys())
-            )
+            selected_class = st.selectbox("Class", list(class_options.keys()))
 
-            selected_class = st.selectbox(
-                "Class",
-                list(class_options.keys())
-            )
+            subject = st.text_input("Subject")
 
-            subject = st.text_input(
-                "Subject"
-            )
+            day = st.selectbox("Day", DAYS_OF_WEEK)
 
-            day = st.selectbox(
-                "Day",
-                DAYS_OF_WEEK
-            )
+            period = st.number_input("Period", min_value=1, max_value=10, step=1)
 
-            period = st.number_input(
-                "Period",
-                min_value=1,
-                max_value=10,
-                step=1
-            )
-
-            submitted = st.form_submit_button(
-                "Add Class"
-            )
+            submitted = st.form_submit_button("Add Class")
 
             if submitted:
-
                 response = requests.post(
                     f"{API_URL}/timetables/",
                     json={
-                        "teacher_id":
-                            teacher_options[selected_teacher],
-
-                        "class_id":
-                            class_options[selected_class],
-
-                        "subject":
-                            subject,
-
-                        "day":
-                            day,
-
-                        "period":
-                            period
-                    }
+                        "teacher_id": teacher_options[selected_teacher],
+                        "class_id": class_options[selected_class],
+                        "subject": subject,
+                        "day": day,
+                        "period": period,
+                    },
                 )
 
                 if response.status_code == 200:
-
-                    st.success(
-                        "Class added successfully!"
-                    )
+                    st.success("Class added successfully!")
 
                     st.rerun()
 
                 else:
-
                     try:
                         error = response.json()["detail"]
                     except Exception:
@@ -1627,7 +1358,6 @@ elif menu == "Timetable":
                     st.error(error)
 
     else:
-
         st.warning(
             "Add at least one teacher and one class before creating a timetable."
         )
@@ -1641,29 +1371,25 @@ elif menu == "Timetable":
     st.subheader("Update class")
 
     if timetables and teachers and classes:
-
         teacher_options = {
-            f'{teacher["id"]} - {teacher["name"]}':
-            teacher["id"]
+            f"{teacher['id']} - {teacher['name']}": teacher["id"]
             for teacher in teachers
         }
 
         class_options = {
-            f'{classroom["id"]} - {classroom["name"]}':
-            classroom["id"]
+            f"{classroom['id']} - {classroom['name']}": classroom["id"]
             for classroom in classes
         }
 
         timetable_options = {
-            f'{item["id"]} - {item["subject"]} - {item["day"]}':
-            item
+            f"{item['id']} - {item['subject']} - {item['day']}": item
             for item in timetables
         }
 
         selected_timetable = st.selectbox(
             "Select Timetable",
             list(timetable_options.keys()),
-            key="update_timetable_select"
+            key="update_timetable_select",
         )
 
         timetable = timetable_options[selected_timetable]
@@ -1674,41 +1400,31 @@ elif menu == "Timetable":
         current_teacher = next(
             (
                 name
-                for name, teacher_id
-                in teacher_options.items()
+                for name, teacher_id in teacher_options.items()
                 if teacher_id == timetable["teacher_id"]
             ),
-            teacher_names[0]
+            teacher_names[0],
         )
 
         current_class = next(
             (
                 name
-                for name, class_id
-                in class_options.items()
+                for name, class_id in class_options.items()
                 if class_id == timetable["class_id"]
             ),
-            class_names[0]
+            class_names[0],
         )
 
         with st.form("update_timetable_form"):
-
             selected_teacher = st.selectbox(
-                "Teacher",
-                teacher_names,
-                index=teacher_names.index(current_teacher)
+                "Teacher", teacher_names, index=teacher_names.index(current_teacher)
             )
 
             selected_class = st.selectbox(
-                "Class",
-                class_names,
-                index=class_names.index(current_class)
+                "Class", class_names, index=class_names.index(current_class)
             )
 
-            subject = st.text_input(
-                "Subject",
-                value=timetable["subject"]
-            )
+            subject = st.text_input("Subject", value=timetable["subject"])
 
             current_day_index = (
                 DAYS_OF_WEEK.index(timetable["day"])
@@ -1716,56 +1432,32 @@ elif menu == "Timetable":
                 else 0
             )
 
-            day = st.selectbox(
-                "Day",
-                DAYS_OF_WEEK,
-                index=current_day_index
-            )
+            day = st.selectbox("Day", DAYS_OF_WEEK, index=current_day_index)
 
             period = st.number_input(
-                "Period",
-                min_value=1,
-                max_value=10,
-                value=timetable["period"],
-                step=1
+                "Period", min_value=1, max_value=10, value=timetable["period"], step=1
             )
 
-            update_button = st.form_submit_button(
-                "Update Class"
-            )
+            update_button = st.form_submit_button("Update Class")
 
             if update_button:
-
                 response = requests.put(
-                    f'{API_URL}/timetables/{timetable["id"]}',
+                    f"{API_URL}/timetables/{timetable['id']}",
                     json={
-                        "teacher_id":
-                            teacher_options[selected_teacher],
-
-                        "class_id":
-                            class_options[selected_class],
-
-                        "subject":
-                            subject,
-
-                        "day":
-                            day,
-
-                        "period":
-                            period
-                    }
+                        "teacher_id": teacher_options[selected_teacher],
+                        "class_id": class_options[selected_class],
+                        "subject": subject,
+                        "day": day,
+                        "period": period,
+                    },
                 )
 
                 if response.status_code == 200:
-
-                    st.success(
-                        "Class updated successfully!"
-                    )
+                    st.success("Class updated successfully!")
 
                     st.rerun()
 
                 else:
-
                     try:
                         error = response.json()["detail"]
                     except Exception:
@@ -1782,37 +1474,28 @@ elif menu == "Timetable":
     st.subheader("Delete class")
 
     if timetables:
-
         timetable_options = {
-            f'{item["id"]} - {item["subject"]} - {item["day"]}':
-            item
+            f"{item['id']} - {item['subject']} - {item['day']}": item
             for item in timetables
         }
 
         selected_timetable = st.selectbox(
             "Select Timetable to Delete",
             list(timetable_options.keys()),
-            key="delete_timetable_select"
+            key="delete_timetable_select",
         )
 
         timetable = timetable_options[selected_timetable]
 
         if st.button("Delete Class"):
-
-            response = requests.delete(
-                f'{API_URL}/timetables/{timetable["id"]}'
-            )
+            response = requests.delete(f"{API_URL}/timetables/{timetable['id']}")
 
             if response.status_code == 200:
-
-                st.success(
-                    "Class deleted successfully!"
-                )
+                st.success("Class deleted successfully!")
 
                 st.rerun()
 
             else:
-
                 try:
                     error = response.json()["detail"]
                 except Exception:
@@ -1826,10 +1509,8 @@ elif menu == "Timetable":
 # ============================================================
 
 elif menu == "Attendance":
-
     page_header(
-        "Attendance",
-        "Mark or correct attendance for a class, subject and date."
+        "Attendance", "Mark or correct attendance for a class, subject and date."
     )
 
     classes = get_data("/classes/")
@@ -1842,21 +1523,16 @@ elif menu == "Attendance":
     st.subheader("Mark attendance")
 
     if not classes:
-
         st.warning("No classes found.")
 
     else:
-
         class_options = {
-            f'{classroom["id"]} - {classroom["name"]}':
-            classroom["id"]
+            f"{classroom['id']} - {classroom['name']}": classroom["id"]
             for classroom in classes
         }
 
         selected_class = st.selectbox(
-            "Class",
-            list(class_options.keys()),
-            key="attendance_class"
+            "Class", list(class_options.keys()), key="attendance_class"
         )
 
         class_id = class_options[selected_class]
@@ -1865,79 +1541,47 @@ elif menu == "Attendance":
         # GET TIMETABLES FOR SELECTED CLASS
         # ----------------------------------------------------
 
-        timetables = get_data(
-            f"/timetables/class/{class_id}"
-        )
+        timetables = get_data(f"/timetables/class/{class_id}")
 
         if not timetables:
-
-            st.warning(
-                "No timetable entries found for this class."
-            )
+            st.warning("No timetable entries found for this class.")
 
         else:
-
             timetable_options = {
-                f'{item["subject"]} - '
-                f'{item["day"]} - '
-                f'Period {item["period"]}':
-                item
+                f"{item['subject']} - {item['day']} - Period {item['period']}": item
                 for item in timetables
             }
 
             selected_timetable = st.selectbox(
-                "Subject",
-                list(timetable_options.keys()),
-                key="attendance_timetable"
+                "Subject", list(timetable_options.keys()), key="attendance_timetable"
             )
 
-            timetable = timetable_options[
-                selected_timetable
-            ]
+            timetable = timetable_options[selected_timetable]
 
             timetable_id = timetable["id"]
 
             attendance_date = st.date_input(
-                "Date",
-                value=date.today(),
-                key="attendance_date"
+                "Date", value=date.today(), key="attendance_date"
             )
 
             # ------------------------------------------------
             # GET STUDENTS IN SELECTED CLASS
             # ------------------------------------------------
 
-            students = get_data(
-                f"/classes/{class_id}/students"
-            )
+            students = get_data(f"/classes/{class_id}/students")
 
             if not students:
-
-                st.info(
-                    "No students are currently assigned "
-                    "to this class."
-                )
+                st.info("No students are currently assigned to this class.")
 
             else:
-
                 st.divider()
 
-                st.subheader(
-                    f"Students — {selected_class}"
-                )
+                st.subheader(f"Students — {selected_class}")
 
-                st.write(
-                    f"Subject: **{timetable['subject']}**"
-                )
-                st.write(
-                    f"Day: **{timetable['day']}**"
-                )
-                st.write(
-                    f"Period: **{timetable['period']}**"
-                )
-                st.write(
-                    f"Date: **{attendance_date.strftime('%d %B %Y')}**"
-                )
+                st.write(f"Subject: **{timetable['subject']}**")
+                st.write(f"Day: **{timetable['day']}**")
+                st.write(f"Period: **{timetable['period']}**")
+                st.write(f"Date: **{attendance_date.strftime('%d %B %Y')}**")
 
                 st.divider()
 
@@ -1945,9 +1589,7 @@ elif menu == "Attendance":
                 # FIND EXISTING ATTENDANCE
                 # ------------------------------------------------
 
-                selected_date_string = (
-                    attendance_date.isoformat()
-                )
+                selected_date_string = attendance_date.isoformat()
 
                 existing_attendance = {
                     record["student_id"]: record
@@ -1998,7 +1640,7 @@ elif menu == "Attendance":
                     }
                     </style>
                     """,
-                    unsafe_allow_html=True
+                    unsafe_allow_html=True,
                 )
 
                 # Table header
@@ -2016,13 +1658,10 @@ elif menu == "Attendance":
                 st.divider()
 
                 for student in students:
-
                     student_id = student["id"]
                     student_name = student["name"]
 
-                    existing_record = existing_attendance.get(
-                        student_id
-                    )
+                    existing_record = existing_attendance.get(student_id)
 
                     # Create a unique state key for this student/date/class/subject.
                     state_key = (
@@ -2052,7 +1691,7 @@ elif menu == "Attendance":
                             "✓ Present" if current_status else "Present",
                             key=f"present_{state_key}",
                             type="primary",
-                            use_container_width=True
+                            use_container_width=True,
                         ):
                             st.session_state[state_key] = True
                             st.rerun()
@@ -2062,7 +1701,7 @@ elif menu == "Attendance":
                             "✓ Absent" if not current_status else "Absent",
                             key=f"absent_{state_key}",
                             type="secondary",
-                            use_container_width=True
+                            use_container_width=True,
                         ):
                             st.session_state[state_key] = False
                             st.rerun()
@@ -2075,16 +1714,11 @@ elif menu == "Attendance":
                 # SAVE ATTENDANCE
                 # ------------------------------------------------
 
-                if st.button(
-                    "Save Attendance",
-                    use_container_width=True
-                ):
-
+                if st.button("Save Attendance", use_container_width=True):
                     success_count = 0
                     error_found = False
 
                     for student in students:
-
                         student_id = student["id"]
 
                         payload = {
@@ -2092,38 +1726,26 @@ elif menu == "Attendance":
                             "timetable_id": timetable_id,
                             "class_id": class_id,
                             "date": selected_date_string,
-                            "status": attendance_status[
-                                student_id
-                            ]
+                            "status": attendance_status[student_id],
                         }
 
-                        existing_record = (
-                            existing_attendance.get(
-                                student_id
-                            )
-                        )
+                        existing_record = existing_attendance.get(student_id)
 
                         if existing_record is None:
-
                             response = requests.post(
-                                f"{API_URL}/attendance/",
-                                json=payload
+                                f"{API_URL}/attendance/", json=payload
                             )
 
                         else:
-
                             response = requests.put(
-                                f'{API_URL}/attendance/'
-                                f'{existing_record["id"]}',
-                                json=payload
+                                f"{API_URL}/attendance/{existing_record['id']}",
+                                json=payload,
                             )
 
                         if response.status_code == 200:
-
                             success_count += 1
 
                         else:
-
                             error_found = True
 
                             try:
@@ -2131,12 +1753,9 @@ elif menu == "Attendance":
                             except Exception:
                                 error = "Something went wrong."
 
-                            st.error(
-                                f"{student['name']}: {error}"
-                            )
+                            st.error(f"{student['name']}: {error}")
 
                     if not error_found:
-
                         st.success(
                             f"Attendance saved successfully "
                             f"for {success_count} students!"
@@ -2153,36 +1772,20 @@ elif menu == "Attendance":
                 st.subheader("Attendance summary")
 
                 present_count = sum(
-                    1
-                    for status in attendance_status.values()
-                    if status
+                    1 for status in attendance_status.values() if status
                 )
 
                 absent_count = sum(
-                    1
-                    for status in attendance_status.values()
-                    if not status
+                    1 for status in attendance_status.values() if not status
                 )
 
                 col1, col2, col3 = st.columns(3)
 
                 with col1:
-
-                    st.metric(
-                        "Total students",
-                        len(students)
-                    )
+                    st.metric("Total students", len(students))
 
                 with col2:
-
-                    st.metric(
-                        "Present",
-                        present_count
-                    )
+                    st.metric("Present", present_count)
 
                 with col3:
-
-                    st.metric(
-                        "Absent",
-                        absent_count
-                    )
+                    st.metric("Absent", absent_count)

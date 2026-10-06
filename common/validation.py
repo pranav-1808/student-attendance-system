@@ -1,20 +1,14 @@
+from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fastapi import HTTPException
-
-from common.constants import DAYS_OF_WEEK, HTTP_BAD_REQUEST
+from common.constants import DAYS_OF_WEEK
 
 
 async def validate_unique_email(
-    model,
-    email: str,
-    db: AsyncSession,
-    record_id: int | None = None
+    model, email: str, db: AsyncSession, record_id: int | None = None
 ):
-    result = await db.execute(
-        select(model).where(model.email == email)
-    )
+    result = await db.execute(select(model).where(model.email == email))
 
     record = result.scalar_one_or_none()
 
@@ -26,9 +20,14 @@ async def validate_unique_email(
 
     return record
 
+
 def validate_day(day: str):
+    day = day.capitalize()
+
     if day not in DAYS_OF_WEEK:
         raise HTTPException(
-            status_code=HTTP_BAD_REQUEST,
-            detail="Invalid day"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid day",
         )
+
+    return day
