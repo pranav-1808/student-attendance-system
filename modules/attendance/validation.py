@@ -24,17 +24,30 @@ async def validate_timetable_class(timetable_id: int, class_id: int, db: AsyncSe
 
 
 async def validate_attendance(
-    student_id: int, timetable_id: int, attendance_date: date, db: AsyncSession
+    student_id: int,
+    timetable_id: int,
+    attendance_date: date,
+    db: AsyncSession,
+    attendance_id: int | None = None,
 ):
-    result = await db.execute(
-        select(Attendance).where(
-            Attendance.student_id == student_id,
-            Attendance.timetable_id == timetable_id,
-            Attendance.date == attendance_date,
-        )
+
+    query = select(Attendance).where(
+        Attendance.student_id == student_id,
+        Attendance.timetable_id == timetable_id,
+        Attendance.date == attendance_date,
     )
 
-    return result.scalar_one_or_none()
+    if attendance_id is not None:
+        query = query.where(Attendance.id != attendance_id)
+
+    result = await db.execute(query)
+    existing_attendance = result.scalar_one_or_none()
+
+    if existing_attendance is not None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Attendance already exists for this class",
+        )
 
 
 async def validate_attendance_exists(attendance_id: int, db: AsyncSession):
@@ -53,15 +66,9 @@ async def validate_create_attendance(attendance: AttendanceCreate, db: AsyncSess
 
     await validate_timetable_class(attendance.timetable_id, attendance.class_id, db)
 
-    existing = await validate_attendance(
+    await validate_attendance(
         attendance.student_id, attendance.timetable_id, attendance.date, db
     )
-
-    if existing is not None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Attendance already exists for this class",
-        )
 
 
 async def validate_update_attendance(
@@ -79,17 +86,12 @@ async def validate_update_attendance(
         db,
     )
 
-    existing = await validate_attendance(
+    await validate_attendance(
         updated_attendance.student_id,
         updated_attendance.timetable_id,
         updated_attendance.date,
         db,
+        attendance_id,
     )
-
-    if existing is not None and existing.id != attendance_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Attendance already exists for this class",
-        )
 
     return existing_attendance

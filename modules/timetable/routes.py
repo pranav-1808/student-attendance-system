@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.session import get_db
 from modules.timetable.schemas import (
     TimetableCreate,
+    TimetableFilters,
     TimetableResponse,
     TimetableUpdate,
 )
@@ -34,22 +35,13 @@ async def create_timetable_route(
 
 @router.get("/", response_model=list[TimetableResponse])
 async def get_timetables_route(
-    request: Request,
+    filters: TimetableFilters = Depends(),
     db: AsyncSession = Depends(get_db),
 ):
-    filters = dict(request.query_params)
-
-    for field in ["teacher_id", "class_id", "period"]:
-        if field in filters:
-            try:
-                filters[field] = int(filters[field])
-            except ValueError:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"{field} must be an integer",
-                )
-
-    return await get_timetables(filters, db)
+    return await get_timetables(
+        filters.model_dump(exclude_none=True),
+        db,
+    )
 
 
 @router.get("/class/{class_id}", response_model=list[TimetableResponse])

@@ -1,8 +1,13 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.session import get_db
-from modules.classroom.schemas import ClassCreate, ClassResponse, ClassUpdate
+from modules.classroom.schemas import (
+    ClassCreate,
+    ClassFliters,
+    ClassResponse,
+    ClassUpdate,
+)
 from modules.classroom.services import (
     add_student_to_class,
     create_class,
@@ -33,10 +38,10 @@ async def create_class_route(
 
 
 @router.get("/", response_model=list[ClassResponse])
-async def get_classes_route(request: Request, db: AsyncSession = Depends(get_db)):
-    filters = dict(request.query_params)
-
-    return await get_classes(filters, db)
+async def get_classes_route(
+    filters: ClassFliters = Depends(), db: AsyncSession = Depends(get_db)
+):
+    return await get_classes(filters.model_dump(exclude_none=True), db)
 
 
 @router.get("/{class_id}", response_model=ClassResponse)

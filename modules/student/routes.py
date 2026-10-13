@@ -2,7 +2,12 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.session import get_db
-from modules.student.schemas import StudentCreate, StudentResponse, StudentUpdate
+from modules.student.schemas import (
+    StudentCreate,
+    StudentFilters,
+    StudentResponse,
+    StudentUpdate,
+)
 from modules.student.services import (
     create_student,
     delete_student,
@@ -28,8 +33,14 @@ async def create_student_route(
 
 
 @router.get("/", response_model=list[StudentResponse])
-async def get_students_route(db: AsyncSession = Depends(get_db)):
-    return await get_students(db)
+async def get_students_route(
+    filters: StudentFilters = Depends(),
+    db: AsyncSession = Depends(get_db),
+):
+    return await get_students(
+        filters.model_dump(exclude_none=True),
+        db,
+    )
 
 
 @router.get("/{student_id}", response_model=StudentResponse)

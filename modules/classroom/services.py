@@ -18,14 +18,22 @@ async def create_class(classroom: ClassCreate, db: AsyncSession):
 
 
 async def get_classes(filters: dict, db: AsyncSession):
+    filters = filters.copy()
+
+    page = filters.pop("page", 1)
+    page_size = filters.pop("page_size", 10)
+
     query = select(Class)
 
     for field, value in filters.items():
-        if hasattr(Class, field):
+        if field == "name":
+            query = query.where(Class.name.ilike(f"%{value}%"))
+        elif hasattr(Class, field):
             query = query.where(getattr(Class, field) == value)
 
+    offset = (page - 1) * page_size
+    query = query.offset(offset).limit(page_size)
     result = await db.execute(query)
-
     return result.scalars().all()
 
 

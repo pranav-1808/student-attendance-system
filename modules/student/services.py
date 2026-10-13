@@ -15,12 +15,24 @@ async def create_student(student: StudentCreate, db: AsyncSession):
     return new_student
 
 
-async def get_students(db: AsyncSession):
-    result = await db.execute(select(Student))
+async def get_students(filters: dict, db: AsyncSession):
+    filters = filters.copy()
 
-    students = result.scalars().all()
+    page = filters.pop("page", 1)
+    page_size = filters.pop("page_size", 10)
 
-    return students
+    query = select(Student)
+
+    for field, value in filters.items():
+        if field == "name":
+            query = query.where(Student.name.ilike(f"%{value}%"))
+        elif hasattr(Student, field):
+            query = query.where(getattr(Student, field) == value)
+
+    offset = (page - 1) * page_size
+    query = query.offset(offset).limit(page_size)
+    result = await db.execute(query)
+    return result.scalars().all()
 
 
 async def get_student(student_id: int, db: AsyncSession):

@@ -15,16 +15,28 @@ class Attendance(Base):
         ),
     )
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-
-    student_id: Mapped[int] = mapped_column(ForeignKey("students.id"))
-
-    timetable_id: Mapped[int] = mapped_column(ForeignKey("timetable.id"))
-
-    date: Mapped[date] = mapped_column(Date)
-
-    status: Mapped[bool] = mapped_column(Boolean)
+    id: Mapped[int] = mapped_column(
+        primary_key=True,
+        nullable=False,
+    )
+    student_id: Mapped[int] = mapped_column(
+        ForeignKey("students.id"),
+        nullable=False,
+    )
+    timetable_id: Mapped[int] = mapped_column(
+        ForeignKey("timetable.id"),
+        nullable=False,
+    )
+    date: Mapped[date] = mapped_column(
+        Date,
+        default=date.today,
+        nullable=False,
+    )
+    status: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False,
+    )
 
     student: Mapped["Student"] = relationship(back_populates="attendances")
-
     timetable: Mapped["Timetable"] = relationship(back_populates="attendances")

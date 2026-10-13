@@ -15,12 +15,24 @@ async def create_teacher(teacher: TeacherCreate, db: AsyncSession):
     return new_teacher
 
 
-async def get_teachers(db: AsyncSession):
-    result = await db.execute(select(Teacher))
+async def get_teachers(filters: dict, db: AsyncSession):
+    filters = filters.copy()
 
-    teachers = result.scalars().all()
+    page = filters.pop("page", 1)
+    page_size = filters.pop("page_size", 10)
 
-    return teachers
+    query = select(Teacher)
+
+    for field, value in filters.items():
+        if field == "name":
+            query = query.where(Teacher.name.ilike(f"%{value}%"))
+        elif hasattr(Teacher, field):
+            query = query.where(getattr(Teacher, field) == value)
+
+    offset = (page - 1) * page_size
+    query = query.offset(offset).limit(page_size)
+    result = await db.execute(query)
+    return result.scalars().all()
 
 
 async def get_teacher(teacher_id: int, db: AsyncSession):

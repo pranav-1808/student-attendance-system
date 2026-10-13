@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from db.session import get_db
 from modules.teacher.schemas import (
     TeacherCreate,
+    TeacherFilters,
     TeacherResponse,
     TeacherUpdate,
 )
@@ -32,8 +33,14 @@ async def create_teacher_route(
 
 
 @router.get("/", response_model=list[TeacherResponse])
-async def get_teachers_route(db: AsyncSession = Depends(get_db)):
-    return await get_teachers(db)
+async def get_teachers_route(
+    filters: TeacherFilters = Depends(),
+    db: AsyncSession = Depends(get_db),
+):
+    return await get_teachers(
+        filters.model_dump(exclude_none=True),
+        db,
+    )
 
 
 @router.get("/{teacher_id}", response_model=TeacherResponse)

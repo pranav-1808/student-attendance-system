@@ -22,14 +22,20 @@ async def create_attendance(attendance: AttendanceCreate, db: AsyncSession):
 
 
 async def get_attendances(filters: dict, db: AsyncSession):
+    filters = filters.copy()
+
+    page = filters.pop("page", 1)
+    page_size = filters.pop("page_size", 10)
+
     query = select(Attendance)
 
     for field, value in filters.items():
         if hasattr(Attendance, field):
             query = query.where(getattr(Attendance, field) == value)
 
+    offset = (page - 1) * page_size
+    query = query.offset(offset).limit(page_size)
     result = await db.execute(query)
-
     return result.scalars().all()
 
 

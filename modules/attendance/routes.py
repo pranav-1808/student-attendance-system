@@ -1,11 +1,10 @@
-from datetime import date
-
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.session import get_db
 from modules.attendance.schemas import (
     AttendanceCreate,
+    AttendanceFilters,
     AttendanceResponse,
     AttendanceUpdate,
 )
@@ -35,42 +34,10 @@ async def create_attendance_route(
 
 @router.get("/", response_model=list[AttendanceResponse])
 async def get_attendances_route(
-    request: Request,
+    filters: AttendanceFilters = Depends(),
     db: AsyncSession = Depends(get_db),
 ):
-    filters = dict(request.query_params)
-
-    for field in ["student_id", "timetable_id", "class_id"]:
-        if field in filters:
-            try:
-                filters[field] = int(filters[field])
-            except ValueError:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"{field} must be an integer",
-                )
-
-    if "status" in filters:
-        if filters["status"].lower() == "true":
-            filters["status"] = True
-        elif filters["status"].lower() == "false":
-            filters["status"] = False
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="status must be true or false",
-            )
-
-    if "date" in filters:
-        try:
-            filters["date"] = date.fromisoformat(filters["date"])
-        except ValueError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="date must be in YYYY-MM-DD format",
-            )
-
-    return await get_attendances(filters, db)
+    return await get_attendances(filters.model_dump(exclude_none=True), db)
 
 
 @router.get("/{attendance_id}", response_model=AttendanceResponse)
