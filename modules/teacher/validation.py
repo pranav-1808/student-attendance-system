@@ -11,6 +11,7 @@ async def validate_create_teacher(
     teacher: TeacherCreate,
     db: AsyncSession,
 ):
+    """Validate that a new teacher's email is not already registered."""
     existing_teacher = await validate_unique_email(
         Teacher,
         teacher.email,
@@ -29,6 +30,7 @@ async def validate_update_teacher(
     teacher: TeacherUpdate,
     db: AsyncSession,
 ):
+    """Validate a teacher update and ensure the email remains unique."""
     existing_teacher = await validate_teacher_exists(teacher_id, db)
 
     if teacher.email is None:
@@ -51,6 +53,7 @@ async def validate_update_teacher(
 
 
 async def validate_teacher_exists(teacher_id: int, db: AsyncSession):
+    """Retrieve a teacher by ID or raise a 404 error if not found."""
     teacher = await get_teacher(teacher_id, db)
 
     if teacher is None:

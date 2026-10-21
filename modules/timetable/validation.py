@@ -11,6 +11,7 @@ from modules.timetable.services import get_timetable
 
 
 async def validate_timetable(teacher_id: int, day: str, period: int, db: AsyncSession):
+    """Check whether a teacher already has a timetable entry for a given period."""
     result = await db.execute(
         select(Timetable).where(
             Timetable.teacher_id == teacher_id,
@@ -23,6 +24,7 @@ async def validate_timetable(teacher_id: int, day: str, period: int, db: AsyncSe
 
 
 async def validate_create_timetable(timetable: TimetableCreate, db: AsyncSession):
+    """Validate a new timetable entry and prevent teacher scheduling conflicts."""
     timetable.day = validate_day(timetable.day)
 
     await validate_teacher_exists(timetable.teacher_id, db)
@@ -48,6 +50,7 @@ async def validate_update_timetable(
     timetable: TimetableUpdate,
     db: AsyncSession,
 ):
+    """Validate timetable updates and prevent scheduling conflicts."""
     existing_timetable = await validate_timetable_exists(timetable_id, db)
 
     timetable.day = validate_day(timetable.day)
@@ -73,6 +76,7 @@ async def validate_update_timetable(
 
 
 async def validate_timetable_exists(timetable_id: int, db: AsyncSession):
+    """Retrieve a timetable entry by ID or raise a 404 error if not found."""
     timetable = await get_timetable(timetable_id, db)
 
     if timetable is None:

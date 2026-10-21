@@ -9,13 +9,11 @@ from modules.student.validation import validate_student_exists
 
 
 async def validate_class_name(name: str, db: AsyncSession, class_id: int | None = None):
+    """Check wether a class name is already used by another class"""
     result = await db.execute(select(Class).where(Class.name == name))
-
     existing_class = result.scalar_one_or_none()
-
     if existing_class is None or existing_class.id == class_id:
         return
-
     raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST, detail="Class name already exists"
     )
@@ -24,6 +22,7 @@ async def validate_class_name(name: str, db: AsyncSession, class_id: int | None 
 async def get_student_class_relationship(
     classroom: Class, student: Student, db: AsyncSession
 ):
+    """Retrieve the association with student and class, if exists"""
     result = await db.execute(
         select(ClassStudents).where(
             ClassStudents.class_id == classroom.id,
@@ -35,6 +34,7 @@ async def get_student_class_relationship(
 
 
 async def validate_class_exists(class_id: int, db: AsyncSession):
+    """Checks if a class exists by ID and raise error when not found"""
     classroom = await get_class(class_id, db)
 
     if classroom is None:
@@ -45,11 +45,17 @@ async def validate_class_exists(class_id: int, db: AsyncSession):
     return classroom
 
 
-async def validate_remove_student(class_id: int, student_id: int, db: AsyncSession):
+async def validate_update_class(class_id: int, name: str, db: AsyncSession):
+    """Validate the class exists and its updated name is unique"""
     classroom = await validate_class_exists(class_id, db)
+    await validate_class_name(name, db, class_id)
+    return classroom
 
+
+async def validate_remove_student(class_id: int, student_id: int, db: AsyncSession):
+    """Validate the class and student exists and are associated"""
+    classroom = await validate_class_exists(class_id, db)
     student = await validate_student_exists(student_id, db)
-
     relationship = await get_student_class_relationship(classroom, student, db)
 
     if relationship is None:
@@ -62,10 +68,9 @@ async def validate_remove_student(class_id: int, student_id: int, db: AsyncSessi
 
 
 async def validate_add_student(class_id: int, student_id: int, db: AsyncSession):
+    """Validate that class and student exists ,and are not already associated"""
     classroom = await validate_class_exists(class_id, db)
-
     student = await validate_student_exists(student_id, db)
-
     relationship = await get_student_class_relationship(classroom, student, db)
 
     if relationship is not None:

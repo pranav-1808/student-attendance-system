@@ -12,6 +12,7 @@ from modules.timetable.validation import validate_timetable_exists
 
 
 async def validate_timetable_class(timetable_id: int, class_id: int, db: AsyncSession):
+    """Validate that a timetable entry belongs to the specified class."""
     timetable = await validate_timetable_exists(timetable_id, db)
 
     if timetable.class_id != class_id:
@@ -30,7 +31,7 @@ async def validate_attendance(
     db: AsyncSession,
     attendance_id: int | None = None,
 ):
-
+    """Prevent duplicate attendance records for a student, timetable, and date."""
     query = select(Attendance).where(
         Attendance.student_id == student_id,
         Attendance.timetable_id == timetable_id,
@@ -51,6 +52,7 @@ async def validate_attendance(
 
 
 async def validate_attendance_exists(attendance_id: int, db: AsyncSession):
+    """Retrieve an attendance record by ID or raise a 404 error if not found."""
     attendance = await get_attendance(attendance_id, db)
 
     if attendance is None:
@@ -62,6 +64,7 @@ async def validate_attendance_exists(attendance_id: int, db: AsyncSession):
 
 
 async def validate_create_attendance(attendance: AttendanceCreate, db: AsyncSession):
+    """Validate the student, class timetable, and uniqueness before creation."""
     await validate_student_exists(attendance.student_id, db)
 
     await validate_timetable_class(attendance.timetable_id, attendance.class_id, db)
@@ -76,6 +79,7 @@ async def validate_update_attendance(
     updated_attendance: AttendanceUpdate,
     db: AsyncSession,
 ):
+    """Validate an attendance update and return the existing record."""
     existing_attendance = await validate_attendance_exists(attendance_id, db)
 
     await validate_student_exists(updated_attendance.student_id, db)

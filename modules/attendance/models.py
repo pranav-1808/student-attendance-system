@@ -7,6 +7,8 @@ from db.base import Base
 
 
 class Attendance(Base):
+    """Represent a student's attendance record for a timetable entry."""
+
     __tablename__ = "attendance"
 
     __table_args__ = (

@@ -4,6 +4,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class AttendanceCreate(BaseModel):
+    """Define the fields required to create an attendance record."""
+
     student_id: int = Field(gt=0)
     timetable_id: int = Field(gt=0)
     class_id: int = Field(gt=0)
@@ -12,6 +14,8 @@ class AttendanceCreate(BaseModel):
 
 
 class AttendanceUpdate(BaseModel):
+    """Define the fields used to update an existing attendance record."""
+
     student_id: int = Field(gt=0)
     timetable_id: int = Field(gt=0)
     class_id: int = Field(gt=0)
@@ -20,6 +24,8 @@ class AttendanceUpdate(BaseModel):
 
 
 class AttendanceFilters(BaseModel):
+    """Define filtering and pagination options for attendance queries."""
+
     student_id: int | None = Field(default=None, gt=0)
     timetable_id: int | None = Field(default=None, gt=0)
     class_id: int | None = Field(default=None, gt=0)
@@ -30,6 +36,8 @@ class AttendanceFilters(BaseModel):
 
 
 class AttendanceResponse(BaseModel):
+    """Define the attendance data returned by the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int
