@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from common.pagination import get_pagination_params
+from common.pagination import PaginationParams, get_pagination_params
 from db.session import get_db
 from modules.attendance.schemas import (
     AttendanceCreate,
@@ -36,21 +36,16 @@ async def create_attendance_route(
 @router.get("/", response_model=list[AttendanceResponse])
 async def get_attendances_route(
     filters: AttendanceFilters = Depends(),
-    pagination: tuple[int, int] = Depends(get_pagination_params),
+    pagination: PaginationParams = Depends(get_pagination_params),
     db: AsyncSession = Depends(get_db),
 ):
     """Retrieve attendance records matching filters and pagination."""
-    page, page_size = pagination
-
     attendance_filters = filters.model_dump(exclude_none=True)
-    attendance_filters.pop("page", None)
-    attendance_filters.pop("page_size", None)
 
     return await get_attendances(
         filters=attendance_filters,
         db=db,
-        page=page,
-        page_size=page_size,
+        pagination=pagination,
     )
 
 

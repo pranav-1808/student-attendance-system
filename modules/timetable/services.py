@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from common.pagination import apply_pagination
+from common.pagination import PaginationParams, apply_pagination
 from modules.timetable.models import Timetable
 from modules.timetable.schemas import TimetableCreate, TimetableUpdate
 
@@ -25,8 +25,7 @@ async def create_timetable(timetable: TimetableCreate, db: AsyncSession):
 async def get_timetables(
     filters: dict,
     db: AsyncSession,
-    page: int,
-    page_size: int,
+    pagination: PaginationParams,
 ):
     """Retrieve timetable entries matching filters and pagination."""
     query = select(Timetable)
@@ -37,7 +36,7 @@ async def get_timetables(
         elif hasattr(Timetable, field):
             query = query.where(getattr(Timetable, field) == value)
 
-    query = apply_pagination(query, page, page_size)
+    query = apply_pagination(query, pagination)
     result = await db.execute(query)
     return result.scalars().all()
 

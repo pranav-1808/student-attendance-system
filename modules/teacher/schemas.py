@@ -20,8 +20,6 @@ class TeacherFilters(BaseModel):
 
     name: str | None = Field(default=None, min_length=1, max_length=100)
     email: EmailStr | None = None
-    page: int = Field(default=1, gt=0)
-    page_size: int = Field(default=10, gt=0, le=100)
 
 
 class TeacherResponse(BaseModel):

@@ -3,7 +3,7 @@ from fastapi_filters.ext.sqlalchemy import apply_filters
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from common.pagination import apply_pagination
+from common.pagination import PaginationParams, apply_pagination
 from modules.classroom.models import Class, ClassStudents
 from modules.classroom.schemas import ClassCreate, ClassUpdate
 from modules.student.models import Student
@@ -21,13 +21,12 @@ async def create_class(classroom: ClassCreate, db: AsyncSession):
 async def get_classes(
     db: AsyncSession,
     query_filters: FilterSet,
-    page: int,
-    page_size: int,
+    pagination: PaginationParams,
 ):
     """Retrieve classrooms matching filters and pagination."""
     query = select(Class)
     query = apply_filters(query, query_filters.filter_values)
-    query = apply_pagination(query, page, page_size)
+    query = apply_pagination(query, pagination)
     result = await db.execute(query)
     return result.scalars().all()
 

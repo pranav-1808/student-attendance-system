@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from common.pagination import apply_pagination
+from common.pagination import apply_pagination, PaginationParams
 from modules.student.models import Student
 from modules.student.schemas import StudentCreate, StudentUpdate
 
@@ -19,8 +19,7 @@ async def create_student(student: StudentCreate, db: AsyncSession):
 async def get_students(
     filters: dict,
     db: AsyncSession,
-    page: int,
-    page_size: int,
+    pagination: PaginationParams,
 ):
     """Retrieve students matching the supplied filters and pagination."""
     query = select(Student)
@@ -31,7 +30,7 @@ async def get_students(
         elif hasattr(Student, field):
             query = query.where(getattr(Student, field) == value)
 
-    query = apply_pagination(query, page, page_size)
+    query = apply_pagination(query, pagination)
     result = await db.execute(query)
     return result.scalars().all()
 

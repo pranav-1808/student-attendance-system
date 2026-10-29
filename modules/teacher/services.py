@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from common.pagination import apply_pagination
+from common.pagination import PaginationParams, apply_pagination
 from modules.teacher.models import Teacher
 from modules.teacher.schemas import TeacherCreate, TeacherUpdate
 
@@ -19,8 +19,7 @@ async def create_teacher(teacher: TeacherCreate, db: AsyncSession):
 async def get_teachers(
     filters: dict,
     db: AsyncSession,
-    page: int,
-    page_size: int,
+    pagination: PaginationParams,
 ):
     """Retrieve teachers matching the supplied filters and pagination."""
     query = select(Teacher)
@@ -31,7 +30,7 @@ async def get_teachers(
         elif hasattr(Teacher, field):
             query = query.where(getattr(Teacher, field) == value)
 
-    query = apply_pagination(query, page, page_size)
+    query = apply_pagination(query, pagination)
 
     result = await db.execute(query)
     return result.scalars().all()

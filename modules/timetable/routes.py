@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from common.pagination import get_pagination_params
+from common.pagination import PaginationParams, get_pagination_params
 from db.session import get_db
 from modules.timetable.schemas import (
     TimetableCreate,
@@ -37,21 +37,16 @@ async def create_timetable_route(
 @router.get("/", response_model=list[TimetableResponse])
 async def get_timetables_route(
     filters: TimetableFilters = Depends(),
-    pagination: tuple[int, int] = Depends(get_pagination_params),
+    pagination: PaginationParams = Depends(get_pagination_params),
     db: AsyncSession = Depends(get_db),
 ):
     """Retrieve timetable entries matching filters and pagination."""
-    page, page_size = pagination
-
     timetable_filters = filters.model_dump(exclude_none=True)
-    timetable_filters.pop("page", None)
-    timetable_filters.pop("page_size", None)
 
     return await get_timetables(
         filters=timetable_filters,
         db=db,
-        page=page,
-        page_size=page_size,
+        pagination=pagination,
     )
 
 

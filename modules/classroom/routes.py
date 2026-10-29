@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from common.pagination import get_pagination_params
+from common.pagination import PaginationParams, get_pagination_params
 from db.session import get_db
 from modules.classroom.schemas import (
     ClassCreate,
@@ -42,17 +42,15 @@ async def create_class_route(
 @router.get("/", response_model=list[ClassResponse])
 async def get_classes_route(
     filters: ClassQueryFilters = Depends(),
-    pagination: tuple[int, int] = Depends(get_pagination_params),
+    pagination: PaginationParams = Depends(get_pagination_params),
     db: AsyncSession = Depends(get_db),
 ):
     """Retrieve classrooms matching the supplied filters and pagination."""
-    page, page_size = pagination
 
     return await get_classes(
         db=db,
         query_filters=filters,
-        page=page,
-        page_size=page_size,
+        pagination=pagination,
     )
 
 

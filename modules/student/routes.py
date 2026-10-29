@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from common.pagination import get_pagination_params
+from common.pagination import PaginationParams, get_pagination_params
 from db.session import get_db
 from modules.student.schemas import (
     StudentCreate,
@@ -36,20 +36,16 @@ async def create_student_route(
 @router.get("/", response_model=list[StudentResponse])
 async def get_students_route(
     filters: StudentFilters = Depends(),
-    pagination: tuple[int, int] = Depends(get_pagination_params),
+    pagination: PaginationParams = Depends(get_pagination_params),
     db: AsyncSession = Depends(get_db),
 ):
     """Retrieve students matching the supplied filters and pagination."""
-    page, page_size = pagination
     student_filters = filters.model_dump(exclude_none=True)
-    student_filters.pop("page", None)
-    student_filters.pop("page_size", None)
 
     return await get_students(
         filters=student_filters,
         db=db,
-        page=page,
-        page_size=page_size,
+        pagination=pagination,
     )
 
 

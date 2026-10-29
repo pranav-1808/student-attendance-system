@@ -1,6 +1,6 @@
 from datetime import date as Date
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class AttendanceCreate(BaseModel):
@@ -14,13 +14,20 @@ class AttendanceCreate(BaseModel):
 
 
 class AttendanceUpdate(BaseModel):
-    """Define the fields used to update an existing attendance record."""
+    """Define the fields that can be updated on an attendance record."""
 
-    student_id: int = Field(gt=0)
-    timetable_id: int = Field(gt=0)
-    class_id: int = Field(gt=0)
-    date: Date
-    status: bool
+    student_id: int | None = Field(default=None, gt=0)
+    timetable_id: int | None = Field(default=None, gt=0)
+    date: Date | None = None
+    status: bool | None = None
+
+    @model_validator(mode="after")
+    def reject_null_values(self):
+        """Reject explicit null values while allowing omitted fields."""
+        for field in self.model_fields_set:
+            if getattr(self, field) is None:
+                raise ValueError(f"{field} cannot be null")
+        return self
 
 
 class AttendanceFilters(BaseModel):
@@ -31,8 +38,6 @@ class AttendanceFilters(BaseModel):
     class_id: int | None = Field(default=None, gt=0)
     status: bool | None = None
     date: Date | None = None
-    page: int = Field(default=1, gt=0)
-    page_size: int = Field(default=10, gt=0, le=100)
 
 
 class AttendanceResponse(BaseModel):

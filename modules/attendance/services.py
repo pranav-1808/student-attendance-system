@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from common.pagination import apply_pagination
+from common.pagination import PaginationParams, apply_pagination
 from modules.attendance.models import Attendance
 from modules.attendance.schemas import AttendanceCreate, AttendanceUpdate
 
@@ -26,8 +26,7 @@ async def create_attendance(attendance: AttendanceCreate, db: AsyncSession):
 async def get_attendances(
     filters: dict,
     db: AsyncSession,
-    page: int,
-    page_size: int,
+    pagination: PaginationParams,
 ):
     """Retrieve attendance records matching filters and pagination."""
     query = select(Attendance)
@@ -36,7 +35,7 @@ async def get_attendances(
         if hasattr(Attendance, field):
             query = query.where(getattr(Attendance, field) == value)
 
-    query = apply_pagination(query, page, page_size)
+    query = apply_pagination(query, pagination)
 
     result = await db.execute(query)
     return result.scalars().all()
@@ -50,13 +49,15 @@ async def get_attendance(attendance_id: int, db: AsyncSession):
 
 
 async def update_attendance(
-    attendance: Attendance, updated_attendance: AttendanceUpdate, db: AsyncSession
+    attendance: Attendance,
+    updated_attendance: AttendanceUpdate,
+    db: AsyncSession,
 ):
-    """Update an attendance record and save the changes to the database."""
-    attendance.student_id = updated_attendance.student_id
-    attendance.timetable_id = updated_attendance.timetable_id
-    attendance.date = updated_attendance.date
-    attendance.status = updated_attendance.status
+    """Update only the supplied attendance fields and save changes."""
+    update_data = updated_attendance.model_dump(exclude_unset=True)
+
+    for field, value in update_data.items():
+        setattr(attendance, field, value)
 
     await db.commit()
     await db.refresh(attendance)

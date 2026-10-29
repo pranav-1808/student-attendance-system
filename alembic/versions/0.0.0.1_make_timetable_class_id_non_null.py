@@ -13,8 +13,8 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "5dcff5ad9e62"
-down_revision: str | Sequence[str] | None = "9366027274aa"
+revision: str = "0.0.0.1"
+down_revision: str | Sequence[str] | None = "0.0.0.0"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

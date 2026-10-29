@@ -12,10 +12,7 @@ async def validate_unique_email(
 
     record = result.scalar_one_or_none()
 
-    if record is None:
-        return None
-
-    if record_id is not None and record.id == record_id:
+    if record is None or (record_id is not None and record.id == record_id):
         return None
 
     return record

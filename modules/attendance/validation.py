@@ -79,21 +79,25 @@ async def validate_update_attendance(
     updated_attendance: AttendanceUpdate,
     db: AsyncSession,
 ):
-    """Validate an attendance update and return the existing record."""
+    """Validate supplied attendance fields and return the existing record."""
     existing_attendance = await validate_attendance_exists(attendance_id, db)
 
-    await validate_student_exists(updated_attendance.student_id, db)
+    update_data = updated_attendance.model_dump(exclude_unset=True)
 
-    await validate_timetable_class(
-        updated_attendance.timetable_id,
-        updated_attendance.class_id,
-        db,
-    )
+    student_id = update_data.get("student_id", existing_attendance.student_id)
+    timetable_id = update_data.get("timetable_id", existing_attendance.timetable_id)
+    attendance_date = update_data.get("date", existing_attendance.date)
+
+    await validate_student_exists(student_id, db)
+
+    timetable = await validate_timetable_exists(timetable_id, db)
+
+    await validate_timetable_class(timetable_id, timetable.class_id, db)
 
     await validate_attendance(
-        updated_attendance.student_id,
-        updated_attendance.timetable_id,
-        updated_attendance.date,
+        student_id,
+        timetable_id,
+        attendance_date,
         db,
         attendance_id,
     )
