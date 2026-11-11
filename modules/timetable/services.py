@@ -36,6 +36,7 @@ async def get_timetables(
         elif hasattr(Timetable, field):
             query = query.where(getattr(Timetable, field) == value)
 
+    query = query.order_by(Timetable.id)
     query = apply_pagination(query, pagination)
     result = await db.execute(query)
     return result.scalars().all()

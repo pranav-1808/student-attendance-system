@@ -30,6 +30,7 @@ async def get_teachers(
         elif hasattr(Teacher, field):
             query = query.where(getattr(Teacher, field) == value)
 
+    query = query.order_by(Teacher.id)
     query = apply_pagination(query, pagination)
 
     result = await db.execute(query)

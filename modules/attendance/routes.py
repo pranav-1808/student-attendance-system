@@ -40,10 +40,9 @@ async def get_attendances_route(
     db: AsyncSession = Depends(get_db),
 ):
     """Retrieve attendance records matching filters and pagination."""
-    attendance_filters = filters.model_dump(exclude_none=True)
 
     return await get_attendances(
-        filters=attendance_filters,
+        filters=filters,
         db=db,
         pagination=pagination,
     )

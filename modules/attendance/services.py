@@ -1,3 +1,5 @@
+from fastapi_filters import FilterSet
+from fastapi_filters.ext.sqlalchemy import apply_filters
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -24,17 +26,15 @@ async def create_attendance(attendance: AttendanceCreate, db: AsyncSession):
 
 
 async def get_attendances(
-    filters: dict,
+    filters: FilterSet,
     db: AsyncSession,
     pagination: PaginationParams,
 ):
     """Retrieve attendance records matching filters and pagination."""
     query = select(Attendance)
+    query = apply_filters(query, filters.filter_values)
 
-    for field, value in filters.items():
-        if hasattr(Attendance, field):
-            query = query.where(getattr(Attendance, field) == value)
-
+    query = query.order_by(Attendance.id)
     query = apply_pagination(query, pagination)
 
     result = await db.execute(query)

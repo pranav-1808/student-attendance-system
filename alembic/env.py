@@ -9,7 +9,7 @@ from core.settings import settings
 from db.base import Base
 
 from modules.attendance.models import Attendance
-from modules.classroom.models import Class, ClassStudents
+from modules.classroom.models import Class, class_students
 from modules.student.models import Student
 from modules.teacher.models import Teacher
 from modules.timetable.models import Timetable

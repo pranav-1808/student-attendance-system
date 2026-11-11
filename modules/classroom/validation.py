@@ -2,7 +2,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from modules.classroom.models import Class, ClassStudents
+from modules.classroom.models import Class, class_students
 from modules.classroom.services import get_class
 from modules.student.models import Student
 from modules.student.validation import validate_student_exists
@@ -24,9 +24,9 @@ async def get_student_class_relationship(
 ):
     """Retrieve the association with student and class, if exists"""
     result = await db.execute(
-        select(ClassStudents).where(
-            ClassStudents.class_id == classroom.id,
-            ClassStudents.student_id == student.id,
+        select(class_students.c.class_id).where(
+            class_students.c.class_id == classroom.id,
+            class_students.c.student_id == student.id,
         )
     )
 

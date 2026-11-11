@@ -1,5 +1,7 @@
 from datetime import date as Date
 
+from fastapi_filters import FilterField, FilterSet
+from fastapi_filters.operators import FilterOperator
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
@@ -30,14 +32,51 @@ class AttendanceUpdate(BaseModel):
         return self
 
 
-class AttendanceFilters(BaseModel):
-    """Define filtering and pagination options for attendance queries."""
+class AttendanceFilters(FilterSet):
+    """Define supported filters for querying attendance records."""
 
-    student_id: int | None = Field(default=None, gt=0)
-    timetable_id: int | None = Field(default=None, gt=0)
-    class_id: int | None = Field(default=None, gt=0)
-    status: bool | None = None
-    date: Date | None = None
+    student_id: FilterField[int] = FilterField(
+        operators=[
+            FilterOperator.eq,
+            FilterOperator.ne,
+            FilterOperator.in_,
+        ],
+        default_op=FilterOperator.eq,
+    )
+
+    timetable_id: FilterField[int] = FilterField(
+        operators=[
+            FilterOperator.eq,
+            FilterOperator.ne,
+            FilterOperator.in_,
+        ],
+        default_op=FilterOperator.eq,
+    )
+
+    class_id: FilterField[int] = FilterField(
+        operators=[
+            FilterOperator.eq,
+            FilterOperator.ne,
+            FilterOperator.in_,
+        ],
+        default_op=FilterOperator.eq,
+    )
+
+    status: FilterField[bool] = FilterField(
+        operators=[FilterOperator.eq],
+        default_op=FilterOperator.eq,
+    )
+
+    date: FilterField[Date] = FilterField(
+        operators=[
+            FilterOperator.eq,
+            FilterOperator.gt,
+            FilterOperator.ge,
+            FilterOperator.lt,
+            FilterOperator.le,
+        ],
+        default_op=FilterOperator.eq,
+    )
 
 
 class AttendanceResponse(BaseModel):
