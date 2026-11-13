@@ -1,0 +1,105 @@
+from datetime import date
+
+from fastapi import HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from modules.attendance.models import Attendance
+from modules.attendance.schemas import AttendanceCreate, AttendanceUpdate
+from modules.attendance.services import get_attendance
+from modules.student.validation import validate_student_exists
+from modules.timetable.validation import validate_timetable_exists
+
+
+async def validate_timetable_class(timetable_id: int, class_id: int, db: AsyncSession):
+    """Validate that a timetable entry belongs to the specified class."""
+    timetable = await validate_timetable_exists(timetable_id, db)
+
+    if timetable.class_id != class_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Timetable does not belong to this class",
+        )
+
+    return timetable
+
+
+async def validate_attendance(
+    student_id: int,
+    timetable_id: int,
+    attendance_date: date,
+    db: AsyncSession,
+    attendance_id: int | None = None,
+):
+    """Prevent duplicate attendance records for a student, timetable, and date."""
+    query = select(Attendance).where(
+        Attendance.student_id == student_id,
+        Attendance.timetable_id == timetable_id,
+        Attendance.date == attendance_date,
+    )
+
+    if attendance_id is not None:
+        query = query.where(Attendance.id != attendance_id)
+
+    result = await db.execute(query)
+    existing_attendance = result.scalar_one_or_none()
+
+    if existing_attendance is not None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Attendance already exists for this class",
+        )
+
+
+async def validate_attendance_exists(attendance_id: int, db: AsyncSession):
+    """Retrieve an attendance record by ID or raise a 404 error if not found."""
+    attendance = await get_attendance(attendance_id, db)
+
+    if attendance is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Attendance not found"
+        )
+
+    return attendance
+
+
+async def validate_create_attendance(attendance: AttendanceCreate, db: AsyncSession):
+    """Validate the student, class timetable, and uniqueness before creation."""
+    await validate_student_exists(attendance.student_id, db)
+
+    await validate_timetable_class(attendance.timetable_id, attendance.class_id, db)
+
+    await validate_attendance(
+        attendance.student_id, attendance.timetable_id, attendance.date, db
+    )
+
+
+async def validate_update_attendance(
+    attendance_id: int,
+    updated_attendance: AttendanceUpdate,
+    db: AsyncSession,
+):
+    """Validate supplied attendance fields and return the existing record."""
+    existing_attendance = await validate_attendance_exists(attendance_id, db)
+
+    update_data = updated_attendance.model_dump(exclude_unset=True)
+
+    student_id = update_data.get("student_id", existing_attendance.student_id)
+    timetable_id = update_data.get("timetable_id", existing_attendance.timetable_id)
+    attendance_date = update_data.get("date", existing_attendance.date)
+
+    await validate_student_exists(student_id, db)
+
+    timetable = await validate_timetable_exists(timetable_id, db)
+
+    await validate_timetable_class(timetable_id, timetable.class_id, db)
+
+    await validate_attendance(
+        student_id,
+        timetable_id,
+        attendance_date,
+        db,
+        attendance_id,
+    )
+
+    return existing_attendance
